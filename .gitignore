@@ -25,6 +25,7 @@
 /[Aa]ssets/DICOM*
 /[Aa]ssets/3rdparty*
 /[Aa]ssets/TextMesh Pro/
+/[Aa]ssets/openDicom*
 
 *.meta
 *.unity
