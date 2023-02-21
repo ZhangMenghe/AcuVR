@@ -4,6 +4,8 @@ using UnityEngine;
 
 public class DisplayRackFactory
 {
+    public static Transform LeftBoardObj;
+    private static bool isLeftBoardAttached = false;
     private static readonly Vector3[] RACK_POSITIONS = {
         new Vector3(2.5f, 2.0f, 1.3f),
         new Vector3(0.12f, 2.0f, 2.6f),
@@ -44,5 +46,29 @@ public class DisplayRackFactory
 
         quad.GetComponent<MeshRenderer>().sharedMaterial = Resources.Load<Material>("RenderTextures/AcuNeedleRT");
         return display_rack;
+    }
+
+    public static void AttachToRoomLeftBoard(string rack_name) {
+        if (!LeftBoardObj)
+        {
+            LeftBoardObj = GameObject.Instantiate(Resources.Load<GameObject>("Prefabs/LeftBoard")).transform;
+            LeftBoardObj.parent = GameObject.Find("Static").transform;
+        }
+
+        isLeftBoardAttached = true;
+        var title = LeftBoardObj.transform.Find("Title");
+        title.GetComponent<TMPro.TextMeshPro>().SetText(rack_name);
+
+        m_rack_names.Add(rack_name);
+    }
+
+    public static void DeAttachToRoomLeftBoard()
+    {
+        if (isLeftBoardAttached)
+        {
+            isLeftBoardAttached = false;
+            GameObject.Destroy(LeftBoardObj.gameObject);
+            LeftBoardObj = null;
+        }
     }
 }

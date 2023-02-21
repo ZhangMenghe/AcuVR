@@ -4,7 +4,7 @@ namespace UnityVolumeRendering
 {
     public enum RenderMode
     {
-        DirectVolumeRendering,
+        DirectVolumeRendering=0,
         MaximumIntensityProjectipon,
         IsosurfaceRendering
     }
@@ -19,11 +19,12 @@ namespace UnityVolumeRendering
 
     public enum ColorTransferScheme
     {
-        None,
+        None=0,
         GrayscaleColor,
         HSVColor,
         BrightColor,
         FireColor,
         CETLabColor
     }
+
 }

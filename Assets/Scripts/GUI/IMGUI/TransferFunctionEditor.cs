@@ -18,8 +18,8 @@ namespace UnityVolumeRendering
 
         public void Initialise()
         {
-            tfGUIMat = Resources.Load<Material>("TransferFunctionGUIMat");
-            tfPaletteGUIMat = Resources.Load<Material>("TransferFunctionPaletteGUIMat");
+            tfGUIMat = Resources.Load<Material>("Materials/TransferFunctionGUIMat");
+            tfPaletteGUIMat = Resources.Load<Material>("Materials/TransferFunctionPaletteGUIMat");
         }
 
         public void SetVolumeObject(VolumeRenderedObject volRendObject)

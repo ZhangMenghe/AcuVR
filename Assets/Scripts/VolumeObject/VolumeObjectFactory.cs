@@ -36,6 +36,8 @@ namespace UnityVolumeRendering
             TransferFunction2D tf2D = TransferFunctionDatabase.CreateTransferFunction2D();
             volObj.transferFunction2D = tf2D;
 
+            meshRenderer.sharedMaterial.EnableKeyword("UNITY_SINGLE_PASS_STEREO");
+
             meshRenderer.sharedMaterial.SetTexture("_DataTex", dataset.GetDataTexture());
             meshRenderer.sharedMaterial.SetTexture("_MaskTex", dataset.maskTexture);
             meshRenderer.sharedMaterial.SetTexture("_GradientTex", null);

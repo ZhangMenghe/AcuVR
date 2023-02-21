@@ -1,4 +1,7 @@
-﻿Shader "VolumeRendering/DirectVolumeRenderingShader"
+﻿#warning Upgrade NOTE: unity_Scale shader variable was removed; replaced 'unity_Scale.w' with '1.0'
+// Upgrade NOTE: replaced '_World2Object' with 'unity_WorldToObject'
+
+Shader "VolumeRendering/DirectVolumeRenderingShader"
 {
     Properties
     {
@@ -113,7 +116,10 @@
                 if(unity_OrthoParams.w == 0)
                 {
                     // Perspective
-                    return normalize(ObjSpaceViewDir(float4(vertexLocal, 0.0f)));
+                    //return normalize(ObjSpaceViewDir(float4(vertexLocal, 0.0f)));
+                    float3 objSpaceCameraPos = mul(unity_WorldToObject, float4(_WorldSpaceCameraPos.xyz, 1)).xyz * 1.0;
+                    return objSpaceCameraPos - vertexLocal;
+
                 }
                 else
                 {

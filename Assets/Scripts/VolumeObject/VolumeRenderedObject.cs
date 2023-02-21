@@ -63,7 +63,7 @@ namespace UnityVolumeRendering
 
         private HelmVolumeParam helm_params = new HelmVolumeParam();
 
-        private List<SlicingPlane> m_sl_planes = new List<SlicingPlane>();
+        //private List<SlicingPlane> m_sl_planes = new List<SlicingPlane>();
         private readonly Vector3[] m_sl_display_poses = new Vector3[] {
             new Vector3(-0.6f, 0.4f, .0f), new Vector3(.0f, 0.4f, .0f), new Vector3(0.6f, 0.4f, .0f),
             new Vector3(-0.6f, -0.2f, .0f), new Vector3(.0f, -0.2f, .0f), new Vector3(0.6f, -0.2f, .0f)
@@ -71,12 +71,15 @@ namespace UnityVolumeRendering
         private readonly Vector3 m_sl_display_scale = Vector3.one * 0.5f;
 
         //TODO:
-        private List<Transform> m_cs_planes = new List<Transform>();
-        private static int MAX_CS_PLANE_NUM = 5;
+        public static readonly int MAX_CS_PLANE_NUM = 5;
         private Matrix4x4[] m_cs_plane_matrices = new Matrix4x4[MAX_CS_PLANE_NUM];
 
         private float m_unified_scale = 1.0f;
         private Vector3 m_real_scale;
+
+        public List<Transform> m_cs_planes { get; set; } = new List<Transform>();
+        public List<SlicingPlane> m_sl_planes { get; set; } = new List<SlicingPlane>();
+
         public void CreateCrossSectionPlane()
         {
             GameObject quad = GameObject.Instantiate((GameObject)Resources.Load("Prefabs/CrossSectionPlane"));
@@ -90,6 +93,15 @@ namespace UnityVolumeRendering
             m_cs_planes.Add(quad.transform);
             meshRenderer.sharedMaterial.EnableKeyword("CUTOUT_PLANE");
         }
+        public void DeleteCrossSectionPlaneAt(int TargetId)
+        {
+            if (TargetId < m_cs_planes.Count)
+            {
+                Destroy(m_cs_planes[TargetId].gameObject);
+                m_cs_planes.RemoveAt(TargetId);
+            }
+        }
+
         private void check_slicing_planes() {
             for (int i = m_sl_planes.Count - 1; i >= 0; i--)
             {
@@ -132,6 +144,15 @@ namespace UnityVolumeRendering
             m_sl_planes.Add(sl_plane);
         }
 
+        public void DeleteSlicingPlaneAt(int TargetId)
+        {
+            if (TargetId < m_sl_planes.Count)
+            {
+                Destroy(m_sl_planes[TargetId].gameObject);
+                m_sl_planes.RemoveAt(TargetId);
+            }
+            //MENGHE: REMOVE THE ONE ON SHLF
+        }
         public void SetRenderMode(RenderMode mode)
         {
             if (renderMode != mode)
@@ -207,7 +228,9 @@ namespace UnityVolumeRendering
         }
         public void SetVolumeUnifiedScale(float new_scale)
         {
-            if(new_scale != m_unified_scale)
+            if (m_real_scale.x == 0f && m_real_scale.y == 0f && m_real_scale.z == 0f) m_real_scale = transform.localScale;
+
+            if (new_scale != m_unified_scale)
             {
                 m_unified_scale = new_scale;
                 transform.localScale = m_real_scale * new_scale;
@@ -399,13 +422,19 @@ namespace UnityVolumeRendering
             if (m_cs_planes.Count == 0) { meshRenderer.sharedMaterial.DisableKeyword("CUTOUT_PLANE"); need_update = false; }
             if (need_update)
             {
-                //TODO: HIDE THE GAME OBJS?
                 int plane_count = Mathf.Min(m_cs_planes.Count, MAX_CS_PLANE_NUM);
+                int active_count = plane_count;
                 for (int i = 0; i < plane_count; i++)
-                    m_cs_plane_matrices[i] = m_cs_planes[i].worldToLocalMatrix * transform.localToWorldMatrix;
+                {
+                    if (!m_cs_planes[i].gameObject.activeSelf){
+                        active_count--; continue; 
+                    }
 
+                    m_cs_plane_matrices[i] = m_cs_planes[i].worldToLocalMatrix * transform.localToWorldMatrix;
+                }
+                
                 meshRenderer.sharedMaterial.EnableKeyword("CUTOUT_PLANE");
-                meshRenderer.sharedMaterial.SetInteger("_CrossSectionNum", plane_count);
+                meshRenderer.sharedMaterial.SetInteger("_CrossSectionNum", active_count);
                 meshRenderer.sharedMaterial.SetMatrixArray("_CrossSectionMatrices", m_cs_plane_matrices);
             }
         }
