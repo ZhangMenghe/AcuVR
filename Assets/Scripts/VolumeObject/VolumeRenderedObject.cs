@@ -63,13 +63,6 @@ namespace UnityVolumeRendering
 
         private HelmVolumeParam helm_params = new HelmVolumeParam();
 
-        //private List<SlicingPlane> m_sl_planes = new List<SlicingPlane>();
-        private readonly Vector3[] m_sl_display_poses = new Vector3[] {
-            new Vector3(-0.6f, 0.4f, .0f), new Vector3(.0f, 0.4f, .0f), new Vector3(0.6f, 0.4f, .0f),
-            new Vector3(-0.6f, -0.2f, .0f), new Vector3(.0f, -0.2f, .0f), new Vector3(0.6f, -0.2f, .0f)
-        };
-        private readonly Vector3 m_sl_display_scale = Vector3.one * 0.5f;
-
         //TODO:
         public static readonly int MAX_CS_PLANE_NUM = 5;
         private Matrix4x4[] m_cs_plane_matrices = new Matrix4x4[MAX_CS_PLANE_NUM];
@@ -78,7 +71,7 @@ namespace UnityVolumeRendering
         private Vector3 m_real_scale;
 
         public List<Transform> m_cs_planes { get; set; } = new List<Transform>();
-        public List<SlicingPlane> m_sl_planes { get; set; } = new List<SlicingPlane>();
+        public List<Transform> SlicingPlaneList { get; set; } = new List<Transform>();
 
         public void CreateCrossSectionPlane()
         {
@@ -103,53 +96,60 @@ namespace UnityVolumeRendering
         }
 
         private void check_slicing_planes() {
-            for (int i = m_sl_planes.Count - 1; i >= 0; i--)
+            for (int i = SlicingPlaneList.Count - 1; i >= 0; i--)
             {
-                if (m_sl_planes[i] == null) { m_sl_planes.Remove(m_sl_planes[i]); continue; }
+                if (SlicingPlaneList[i] == null) { SlicingPlaneList.Remove(SlicingPlaneList[i]); continue; }
             }
         }
         public void CreateSlicingPlane()
         {
             //check the list
             check_slicing_planes();
+            
+            var slicePlaneObj = GameObject.Instantiate(Resources.Load<GameObject>("Prefabs/SlicingPlane")).transform;
+            slicePlaneObj.parent = transform;
+            slicePlaneObj.GetComponent<SlicingPlane>().Initialized(
+                "SLPlane" + SlicingPlaneList.Count,
+                dataset.GetDataTexture(), 
+                transferFunction.GetTexture()
+                );
+            SlicingPlaneList.Add(slicePlaneObj);
 
-            GameObject sliceRenderingPlane = GameObject.Instantiate(Resources.Load<GameObject>("Prefabs/SlicingPlane"));
-            sliceRenderingPlane.name = "SLPlane" + m_sl_planes.Count;
+            //slicePlaneObj.name = "SLPlane" + m_sl_planes.Count;
 
-            sliceRenderingPlane.transform.parent = transform;
-            sliceRenderingPlane.transform.localRotation = Quaternion.identity;
-            sliceRenderingPlane.transform.localPosition = Vector3.zero;
-            sliceRenderingPlane.transform.localScale = Vector3.one * 0.1f;
+            //slicePlaneObj.parent = transform;
+            //slicePlaneObj.localRotation = Quaternion.identity;
+            //slicePlaneObj.localPosition = Vector3.zero;
+            //slicePlaneObj.localScale = Vector3.one * 0.1f;
 
-            MeshRenderer sliceMeshRend = sliceRenderingPlane.GetComponent<MeshRenderer>();
-            sliceMeshRend.material = new Material(sliceMeshRend.sharedMaterial);
-            Material sliceMat = sliceRenderingPlane.GetComponent<MeshRenderer>().sharedMaterial;
-            sliceMat.SetTexture("_DataTex", dataset.GetDataTexture());
-            sliceMat.SetTexture("_TFTex", transferFunction.GetTexture());
+            ////MeshRenderer sliceMeshRend = slicePlaneObj.GetComponent<MeshRenderer>();
+            ////sliceMeshRend.material = new Material(sliceMeshRend.sharedMaterial);
+            //Material sliceMat = slicePlaneObj.GetComponent<MeshRenderer>().sharedMaterial;
+            //sliceMat.SetTexture("_DataTex", dataset.GetDataTexture());
+            //sliceMat.SetTexture("_TFTex", transferFunction.GetTexture());
 
-            var slicing_plane_rack = GameObject.Find("Slicing Planes");
-            if (slicing_plane_rack == null)
-            {
-                slicing_plane_rack = DisplayRackFactory.CreateDisplayRack("Slicing Planes");
-            }
+            //var slicing_plane_rack = GameObject.Find("Slicing Planes");
+            //if (slicing_plane_rack == null)
+            //{
+            //    slicing_plane_rack = DisplayRackFactory.CreateDisplayRack("Slicing Planes");
+            //}
 
-            SlicingPlane sl_plane = sliceRenderingPlane.GetComponent<SlicingPlane>();
-            sl_plane.CreatePolySlicingPlane(
-                slicing_plane_rack.transform,
-                dataset.GetDataTexture(), transferFunction.GetTexture(), 
-                m_sl_planes.Count,
-                m_sl_display_poses[m_sl_planes.Count % 5], m_sl_display_scale);
-            //MENGHE: add drawing plane at the right place
-            sl_plane.AddAnnotationPlane(Resources.Load<RenderTexture>("RenderTextures/DrawRT"));
-            m_sl_planes.Add(sl_plane);
+            //slicePlane.CreatePolySlicingPlane(
+            //    slicing_plane_rack.transform,
+            //    dataset.GetDataTexture(), transferFunction.GetTexture(),
+            //    m_sl_planes.Count,
+            //    DisplayRackFactory.mDisplayPoses[m_sl_planes.Count % 5], DisplayRackFactory.mUnitScale);
+            ////MENGHE: add drawing plane at the right place
+            ////slicePlane.AddAnnotationPlane(Resources.Load<RenderTexture>("RenderTextures/DrawRT"));
+            //m_sl_planes.Add(slicePlane);
         }
 
         public void DeleteSlicingPlaneAt(int TargetId)
         {
-            if (TargetId < m_sl_planes.Count)
+            if (TargetId < SlicingPlaneList.Count)
             {
-                Destroy(m_sl_planes[TargetId].gameObject);
-                m_sl_planes.RemoveAt(TargetId);
+                Destroy(SlicingPlaneList[TargetId].gameObject);
+                SlicingPlaneList.RemoveAt(TargetId);
             }
             //MENGHE: REMOVE THE ONE ON SHLF
         }

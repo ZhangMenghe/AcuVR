@@ -32,7 +32,7 @@ public class SlicingEdit : CrossSectionEdit
         if (mTargetId < 0) return;
 
         mSectionVisibilities[mTargetId] = !mSectionVisibilities[mTargetId];
-        RootUIManager.mTargetVolume.m_sl_planes[mTargetId].gameObject.SetActive(mSectionVisibilities[mTargetId]);
+        RootUIManager.mTargetVolume.SlicingPlaneList[mTargetId].gameObject.SetActive(mSectionVisibilities[mTargetId]);
 
         UpdateSprite(mSectionVisibilities[mTargetId]);
     }

@@ -9,6 +9,9 @@ namespace UnityVolumeRendering
         private MeshRenderer canvasRenderer = null;
         private Material displayCanvasMaterial;
 
+        public Texture mDataTex;
+        public Texture mTFTex;
+
         public void CreatePolySlicingPlane(Transform parent_transform, 
             Texture data_tex, Texture trans_tex, int cid, 
             Vector3 local_position, Vector3 local_scale)
@@ -37,9 +40,26 @@ namespace UnityVolumeRendering
         {
             //if(m_display_canvas != null) GameObject.DestroyImmediate(m_display_canvas.gameObject);
         }
-        private void Start()
+
+        public void Initialized(string name, in Texture data_tex, in Texture tf_tex)
         {
+            gameObject.name = name;
+
+            transform.localRotation = Quaternion.identity;
+            transform.localPosition = Vector3.zero;
+            transform.localScale = Vector3.one * 0.1f;
+
+            mDataTex = data_tex; mTFTex = tf_tex;
+
+            MeshRenderer sliceMeshRend = transform.GetComponent<MeshRenderer>();
+            sliceMeshRend.material = new Material(sliceMeshRend.sharedMaterial);
+            
+            Material sliceMat = transform.GetComponent<MeshRenderer>().sharedMaterial;
+            sliceMat.SetTexture("_DataTex", data_tex);
+            sliceMat.SetTexture("_TFTex", tf_tex);
+
             meshRenderer = GetComponent<MeshRenderer>();
+
         }
 
         private void Update()

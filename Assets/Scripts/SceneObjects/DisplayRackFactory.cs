@@ -1,11 +1,28 @@
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 
 public class DisplayRackFactory
 {
-    public static Transform LeftBoardObj;
-    private static bool isLeftBoardAttached = false;
+    public enum DisplayRacks
+    {
+        ROOM_LEFT_BOARD = 0,
+        DISPLAY_RACK_END
+    }
+    //public static Transform LeftBoardObj;
+    public static Transform[] DisplayRackObjs;
+
+    private static bool[] isDisplayRackAttached = new bool[(int)DisplayRacks.DISPLAY_RACK_END];
+    private static List<bool>[] visibilityLists = Enumerable.Repeat(new List<bool>(), (int)DisplayRacks.DISPLAY_RACK_END).ToArray();
+    private static List<Material>[] frameMaterials = Enumerable.Repeat(new List<Material>(), (int)DisplayRacks.DISPLAY_RACK_END).ToArray();
+
+    public static readonly Vector3[] mDisplayPoses = new Vector3[] {
+            new Vector3(-0.6f, 0.4f, .0f), new Vector3(.0f, 0.4f, .0f), new Vector3(0.6f, 0.4f, .0f),
+            new Vector3(-0.6f, -0.2f, .0f), new Vector3(.0f, -0.2f, .0f), new Vector3(0.6f, -0.2f, .0f)
+        };
+    public static readonly Vector3 mUnitScale = Vector3.one * 0.5f;
+
     private static readonly Vector3[] RACK_POSITIONS = {
         new Vector3(2.5f, 2.0f, 1.3f),
         new Vector3(0.12f, 2.0f, 2.6f),
@@ -48,27 +65,48 @@ public class DisplayRackFactory
         return display_rack;
     }
 
-    public static void AttachToRoomLeftBoard(string rack_name) {
-        if (!LeftBoardObj)
+    public static void AttachToRack(DisplayRacks rackId, string rack_name) {
+        if(rackId == DisplayRacks.ROOM_LEFT_BOARD)
         {
-            LeftBoardObj = GameObject.Instantiate(Resources.Load<GameObject>("Prefabs/LeftBoard")).transform;
-            LeftBoardObj.parent = GameObject.Find("Static").transform;
+            ref Transform LeftBoardObj = ref DisplayRackObjs[(int)rackId];
+            if (!LeftBoardObj)
+            {
+                LeftBoardObj = GameObject.Instantiate(Resources.Load<GameObject>("Prefabs/LeftBoard")).transform;
+                LeftBoardObj.parent = GameObject.Find("Static").transform;
+            }
+
+            isDisplayRackAttached[(int)rackId] = true;
+            var title = LeftBoardObj.transform.Find("Title");
+            title.GetComponent<TMPro.TextMeshPro>().SetText(rack_name);
         }
-
-        isLeftBoardAttached = true;
-        var title = LeftBoardObj.transform.Find("Title");
-        title.GetComponent<TMPro.TextMeshPro>().SetText(rack_name);
-
-        m_rack_names.Add(rack_name);
     }
 
-    public static void DeAttachToRoomLeftBoard()
+    public static void DeAttachFromRack(DisplayRacks rackId)
     {
-        if (isLeftBoardAttached)
+        if (isDisplayRackAttached[(int)rackId])
         {
-            isLeftBoardAttached = false;
-            GameObject.Destroy(LeftBoardObj.gameObject);
-            LeftBoardObj = null;
+            isDisplayRackAttached[(int)rackId] = false;
+            GameObject.Destroy(DisplayRackObjs[(int)rackId].gameObject);
+            DisplayRackObjs[(int)rackId] = null;
         }
+    }
+
+    public void AddFrame(DisplayRacks rackId, ref UnityVolumeRendering.SlicingPlane slicingPlane)
+    {
+        int curr_frame_num = visibilityLists[(int)rackId].Count;
+        GameObject frame = GameObject.Instantiate(Resources.Load<GameObject>("Prefabs/SingleCanvas"));
+        frame.name = "canvas" + curr_frame_num;
+        frame.transform.parent = DisplayRackObjs[(int)rackId];
+        frame.transform.localPosition = mDisplayPoses[curr_frame_num % 6];
+        frame.transform.localRotation = Quaternion.identity;
+        frame.transform.localScale = mUnitScale;
+
+        var canvasRenderer = frame.GetComponent<MeshRenderer>();
+        var frame_material = new Material(canvasRenderer.sharedMaterial);
+        frame_material.SetTexture("_DataTex", slicingPlane.mDataTex);
+        frame_material.SetTexture("_TFTex", slicingPlane.mTFTex);
+        
+        frameMaterials[(int)rackId].Add(frame_material);
+        visibilityLists[(int)rackId].Add(true);
     }
 }
