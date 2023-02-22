@@ -2,8 +2,8 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-
-public class DisplayRackFactory
+//[ExecuteInEditMode]
+public class DisplayRackFactory//:MonoBehaviour
 {
     public enum DisplayRacks
     {
@@ -11,17 +11,22 @@ public class DisplayRackFactory
         DISPLAY_RACK_END
     }
     //public static Transform LeftBoardObj;
-    public static Transform[] DisplayRackObjs;
+    private static Transform[] DisplayRackObjs = new Transform[(int)DisplayRacks.DISPLAY_RACK_END];
 
     private static bool[] isDisplayRackAttached = new bool[(int)DisplayRacks.DISPLAY_RACK_END];
     private static List<bool>[] visibilityLists = Enumerable.Repeat(new List<bool>(), (int)DisplayRacks.DISPLAY_RACK_END).ToArray();
     private static List<Material>[] frameMaterials = Enumerable.Repeat(new List<Material>(), (int)DisplayRacks.DISPLAY_RACK_END).ToArray();
+    private static List<Transform>[] frameList = Enumerable.Repeat(new List<Transform>(), (int)DisplayRacks.DISPLAY_RACK_END).ToArray();
+    private static List<Transform> slicingPlaneList = new List<Transform>();
 
-    public static readonly Vector3[] mDisplayPoses = new Vector3[] {
-            new Vector3(-0.6f, 0.4f, .0f), new Vector3(.0f, 0.4f, .0f), new Vector3(0.6f, 0.4f, .0f),
-            new Vector3(-0.6f, -0.2f, .0f), new Vector3(.0f, -0.2f, .0f), new Vector3(0.6f, -0.2f, .0f)
-        };
-    public static readonly Vector3 mUnitScale = Vector3.one * 0.5f;
+    private static readonly Vector3 LeftUpperCorner=new Vector3(-1.5f, -1.0f,  -0.1f);
+    private static readonly Vector2 FrameGap = new Vector2(1.0f, -1.0f);
+
+    //public static readonly Vector3[] mDisplayPoses = new Vector3[] {
+    //        new Vector3(-0.6f, 0.4f, -0.1f), new Vector3(.0f, 0.4f, .0f), new Vector3(0.6f, 0.4f, .0f),
+    //        new Vector3(-0.6f, -0.2f, .0f), new Vector3(.0f, -0.2f, .0f), new Vector3(0.6f, -0.2f, .0f)
+    //    };
+    public static readonly Vector3 mUnitScale = Vector3.one * 0.8f;
 
     private static readonly Vector3[] RACK_POSITIONS = {
         new Vector3(2.5f, 2.0f, 1.3f),
@@ -68,15 +73,20 @@ public class DisplayRackFactory
     public static void AttachToRack(DisplayRacks rackId, string rack_name) {
         if(rackId == DisplayRacks.ROOM_LEFT_BOARD)
         {
-            ref Transform LeftBoardObj = ref DisplayRackObjs[(int)rackId];
-            if (!LeftBoardObj)
+            if (!DisplayRackObjs[(int)rackId])
             {
-                LeftBoardObj = GameObject.Instantiate(Resources.Load<GameObject>("Prefabs/LeftBoard")).transform;
-                LeftBoardObj.parent = GameObject.Find("Static").transform;
+                Transform StaticParent = GameObject.Find("Static").transform;
+                DisplayRackObjs[(int)rackId] = StaticParent.Find("LeftBoard");
+                if (!DisplayRackObjs[(int)rackId])
+                {
+                    DisplayRackObjs[(int)rackId] = GameObject.Instantiate(Resources.Load<GameObject>("Prefabs/LeftBoard")).transform;
+                    DisplayRackObjs[(int)rackId].parent = GameObject.Find("Static").transform;
+                    DisplayRackObjs[(int)rackId].name = "LeftBoard";
+                }
             }
 
             isDisplayRackAttached[(int)rackId] = true;
-            var title = LeftBoardObj.transform.Find("Title");
+            var title = DisplayRackObjs[(int)rackId].Find("Title");
             title.GetComponent<TMPro.TextMeshPro>().SetText(rack_name);
         }
     }
@@ -86,27 +96,121 @@ public class DisplayRackFactory
         if (isDisplayRackAttached[(int)rackId])
         {
             isDisplayRackAttached[(int)rackId] = false;
-            GameObject.Destroy(DisplayRackObjs[(int)rackId].gameObject);
-            DisplayRackObjs[(int)rackId] = null;
+            if (DisplayRackObjs[(int)rackId])
+            {
+                GameObject.Destroy(DisplayRackObjs[(int)rackId].gameObject);
+                DisplayRackObjs[(int)rackId] = null;
+            }
         }
     }
 
-    public void AddFrame(DisplayRacks rackId, ref UnityVolumeRendering.SlicingPlane slicingPlane)
+    public static void AddFrame(DisplayRacks rackId, in UnityVolumeRendering.SlicingPlane slicingPlane)
     {
+        if (!isDisplayRackAttached[(int)rackId]) return;
         int curr_frame_num = visibilityLists[(int)rackId].Count;
-        GameObject frame = GameObject.Instantiate(Resources.Load<GameObject>("Prefabs/SingleCanvas"));
+        Transform frame = GameObject.Instantiate(Resources.Load<GameObject>("Prefabs/SingleCanvas")).transform;
         frame.name = "canvas" + curr_frame_num;
-        frame.transform.parent = DisplayRackObjs[(int)rackId];
-        frame.transform.localPosition = mDisplayPoses[curr_frame_num % 6];
-        frame.transform.localRotation = Quaternion.identity;
-        frame.transform.localScale = mUnitScale;
+        frame.parent = DisplayRackObjs[(int)rackId];
+        //MENGHE:FIX THIS WITH PAGES
+        curr_frame_num = curr_frame_num % 8;
+        frame.localPosition = LeftUpperCorner + new Vector3((curr_frame_num % 4)*FrameGap.x, (curr_frame_num /4)*FrameGap.y, .0f);
+        //frame.localPosition = mDisplayPoses[curr_frame_num % 4];
+        frame.localRotation = Quaternion.identity;
+        frame.localScale = mUnitScale;
 
         var canvasRenderer = frame.GetComponent<MeshRenderer>();
         var frame_material = new Material(canvasRenderer.sharedMaterial);
         frame_material.SetTexture("_DataTex", slicingPlane.mDataTex);
         frame_material.SetTexture("_TFTex", slicingPlane.mTFTex);
-        
+
+        frameList[(int)rackId].Add(frame);
         frameMaterials[(int)rackId].Add(frame_material);
         visibilityLists[(int)rackId].Add(true);
+
+        if (rackId == DisplayRacks.ROOM_LEFT_BOARD)
+            slicingPlaneList.Add(slicingPlane.transform);
     }
+    public static void RemoveFrame(DisplayRacks rackId, int targetId)
+    {
+        if (!isDisplayRackAttached[(int)rackId]) return;
+
+        GameObject.Destroy(frameList[(int)rackId][targetId]);
+        frameList[(int)rackId].RemoveAt(targetId);
+        frameMaterials[(int)rackId].RemoveAt(targetId);
+        visibilityLists[(int)rackId].RemoveAt(targetId);
+        if (rackId == DisplayRacks.ROOM_LEFT_BOARD)
+        {
+            GameObject.Destroy(slicingPlaneList[targetId]);
+            slicingPlaneList.RemoveAt(targetId);
+        }
+    }
+    public static void ChangeFrameVisibilityStatus(DisplayRacks rackId, int targetId, bool isOn)
+    {
+        if (!isDisplayRackAttached[(int)rackId] || visibilityLists[(int)rackId][targetId]==isOn) return;
+        visibilityLists[(int)rackId][targetId] = isOn;
+        //frameList[(int)rackId][targetId];
+        var targetFrame = frameList[(int)rackId][targetId];
+
+        if (isOn)
+        {
+            if (targetFrame.childCount > 0) {
+                for (int i = 0; i < targetFrame.childCount; i++)
+                {
+                    targetFrame.GetChild(i).gameObject.SetActive(false);
+                }
+            }
+        }
+        else
+        {
+            if (targetFrame.childCount > 0)
+            {
+                for (int i = 0; i < targetFrame.childCount; i++)
+                {
+                    targetFrame.GetChild(i).gameObject.SetActive(true);
+                }
+            }
+            else
+            {
+                var invisible_quad = GameObject.Instantiate((GameObject)Resources.Load("Prefabs/InvisibleShadeCanvas")).transform;
+                invisible_quad.parent = targetFrame;
+                invisible_quad.localPosition = new Vector3(.0f, .0f, -0.01f);
+                invisible_quad.localRotation = Quaternion.identity;
+                invisible_quad.localScale = Vector3.one;
+            }
+        }
+    }
+    public static void RenderFrames()
+    {
+        for (int i=0; i<(int)DisplayRacks.DISPLAY_RACK_END; i++)
+        {
+            if (!isDisplayRackAttached[i]) continue;
+
+            var currFrameList = frameList[i];
+            var currFrameMats = frameMaterials[i];
+            var currVisibilities = visibilityLists[i];
+
+            for (int fid=0; fid<frameList[i].Count; fid++)
+            {
+                var canvasRenderer = currFrameList[fid].GetComponent<MeshRenderer>();
+                if (canvasRenderer != null)
+                {
+                    if(currVisibilities[fid]) currFrameMats[fid].DisableKeyword("INVISIBLE");
+                    else currFrameMats[fid].EnableKeyword("INVISIBLE");
+
+                    currFrameMats[fid].DisableKeyword("OVERRIDE_MODEL_MAT");
+                    currFrameMats[fid].SetMatrix("_parentInverseMat", slicingPlaneList[fid].parent.worldToLocalMatrix);
+                    currFrameMats[fid].SetMatrix("_planeMat", Matrix4x4.TRS(
+                        slicingPlaneList[fid].position,
+                        slicingPlaneList[fid].rotation,
+                        slicingPlaneList[fid].parent ? slicingPlaneList[fid].parent.lossyScale : slicingPlaneList[fid].lossyScale));
+                    canvasRenderer.sharedMaterial = currFrameMats[fid];
+                }
+            }
+        }
+
+    }
+    //private void Update()
+    //{
+    //    RenderFrames();
+    //}
 }

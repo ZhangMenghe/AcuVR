@@ -301,14 +301,17 @@ namespace UnityVolumeRendering
         [MenuItem("Volume Rendering/Slice renderer")]
         static void ShowSliceRenderer()
         {
-            VolumeRenderedObject[] objects = GameObject.FindObjectsOfType<VolumeRenderedObject>();
-            if (objects.Length == 1)
-                objects[0].CreateSlicingPlane();
-            else
-            {
+            //DisplayRackFactory.AttachToRack(DisplayRackFactory.DisplayRacks.ROOM_LEFT_BOARD, "Slicing Planes");
+            //VolumeRenderedObject[] objects = GameObject.FindObjectsOfType<VolumeRenderedObject>();
+            ////if (objects.Length == 1)
+            //{
+            //    objects[0].CreateSlicingPlane();
+            //}
+            //else
+            //{
                 SlicingPlaneEditorWindow wnd = new SlicingPlaneEditorWindow();
                 wnd.Show();
-            }
+            //}
             //SliceRenderingEditorWindow.ShowWindow();
         }
         [MenuItem("Volume Rendering/Add Needle")]

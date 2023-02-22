@@ -100,6 +100,10 @@ namespace UnityVolumeRendering
             {
                 if (SlicingPlaneList[i] == null) { SlicingPlaneList.Remove(SlicingPlaneList[i]); continue; }
             }
+            //MENGHE: JUST FOR DEBUG
+            //if(SlicingPlaneList.Count == 0)
+            //    DisplayRackFactory.DeAttachFromRack(DisplayRackFactory.DisplayRacks.ROOM_LEFT_BOARD);
+
         }
         public void CreateSlicingPlane()
         {
@@ -108,12 +112,16 @@ namespace UnityVolumeRendering
             
             var slicePlaneObj = GameObject.Instantiate(Resources.Load<GameObject>("Prefabs/SlicingPlane")).transform;
             slicePlaneObj.parent = transform;
-            slicePlaneObj.GetComponent<SlicingPlane>().Initialized(
+            var slicing_plane = slicePlaneObj.GetComponent<SlicingPlane>();
+            slicing_plane.Initialized(
                 "SLPlane" + SlicingPlaneList.Count,
                 dataset.GetDataTexture(), 
                 transferFunction.GetTexture()
                 );
             SlicingPlaneList.Add(slicePlaneObj);
+            DisplayRackFactory.AddFrame(DisplayRackFactory.DisplayRacks.ROOM_LEFT_BOARD, slicing_plane);
+
+            //return slicing_plane;
 
             //slicePlaneObj.name = "SLPlane" + m_sl_planes.Count;
 
@@ -413,6 +421,8 @@ namespace UnityVolumeRendering
 
         private void Update()
         {
+            //MENGHE! ONLY FOR DEBUG!!!!
+            DisplayRackFactory.RenderFrames();
             //MENGHE: DO NOT CHECK EVERYTIME
             bool need_update = false;
             for(int i=m_cs_planes.Count-1; i>=0; i--) { 
