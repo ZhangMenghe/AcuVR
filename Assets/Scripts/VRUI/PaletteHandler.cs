@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class PaletteHandler : MonoBehaviour
+public class PaletteHandler : RayInteractableHandler
 {
     public GameObject paletteCanvas;
     public void OnHover()
@@ -22,15 +22,13 @@ public class PaletteHandler : MonoBehaviour
     {
         paletteCanvas.GetComponent<Image>().color = new Color(.0f, 1.0f, .0f);
     }
-    //// Start is called before the first frame update
-    //void Start()
-    //{
+    void Start()
+    {
 
-    //}
+    }
 
-    //// Update is called once per frame
-    //void Update()
-    //{
+    void Update()
+    {
 
-    //}
+    }
 }
