@@ -5,23 +5,43 @@ namespace UnityVolumeRendering
 {
     public class VolumeObjectFactory
     {
-        public static VolumeRenderedObject CreateObject(VolumeDataset dataset)
+        //MENGHE:SNAPABLE T ONLY IN VR
+        public static VolumeRenderedObject CreateObject(VolumeDataset dataset, bool Snapable = true)
         {
-            GameObject outerObject = new GameObject("VolumeRenderedObject_" + dataset.datasetName);
-            outerObject.transform.rotation = Quaternion.Euler(-90.0f, 0.0f, 180.0f);
-            //MENGHE: where to put?
-            outerObject.transform.position = new Vector3(.0f, 1.5f, .0f);
+            Transform VolumeObject;
+            Transform meshContainer;
+            if (Snapable)
+            {
+                Transform snapable_obj = GameObject.Instantiate((GameObject)Resources.Load("Prefabs/AAHSnapVolume")).transform;
+                snapable_obj.name = "VolumeRenderedObject_" + dataset.datasetName;
+                snapable_obj.rotation = Quaternion.identity;
+                snapable_obj.position = new Vector3(.0f, 1.5f, .0f);
 
-            GameObject meshContainer = GameObject.Instantiate((GameObject)Resources.Load("Prefabs/VolumeContainer"));
-            meshContainer.transform.parent = outerObject.transform;
-            meshContainer.transform.localScale = Vector3.one;
-            meshContainer.transform.localPosition = Vector3.zero;
-            meshContainer.transform.localRotation = Quaternion.identity;
+                VolumeObject = snapable_obj.Find("VolumeObject");
+                VolumeObject.localRotation = Quaternion.Euler(-90.0f, 0.0f, 180.0f);
+                VolumeObject.localPosition = Vector3.zero;
+
+                meshContainer = VolumeObject.Find("VolumeContainer");
+            }
+            else
+            {
+                VolumeObject = new GameObject("VolumeRenderedObject_" + dataset.datasetName).transform;
+                VolumeObject.tag = "VolumeRenderingObject";
+                VolumeObject.rotation = Quaternion.Euler(-90.0f, 0.0f, 180.0f);
+                //MENGHE: where to put?
+                VolumeObject.position = new Vector3(.0f, 1.5f, .0f);
+
+                meshContainer = GameObject.Instantiate((GameObject)Resources.Load("Prefabs/VolumeContainer")).transform;
+                meshContainer.parent = VolumeObject;
+                meshContainer.localScale = Vector3.one;
+                meshContainer.localPosition = Vector3.zero;
+                meshContainer.localRotation = Quaternion.identity;
+            }
+            VolumeRenderedObject volObj = VolumeObject.gameObject.AddComponent<VolumeRenderedObject>();
 
             MeshRenderer meshRenderer = meshContainer.GetComponent<MeshRenderer>();
             meshRenderer.sharedMaterial = new Material(meshRenderer.sharedMaterial);
 
-            VolumeRenderedObject volObj = outerObject.AddComponent<VolumeRenderedObject>();
             volObj.meshRenderer = meshRenderer;
             volObj.dataset = dataset;
 

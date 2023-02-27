@@ -38,15 +38,14 @@ public class CylinderUI : MonoBehaviour
     private void Awake()
     {
         mIsPanelOn = Enumerable.Repeat(false, (int)CylinderPanels.END_PANEL).ToArray();
-    }
-    private void Start()
-    {
+        VolumeRenderedObject.isSnapAble = true;
+
         //MENGHE:!WORK ON THAT TO ENABLE MORE OBJS!!!!
         try
         {
             mTargetVolume = GameObject.FindGameObjectWithTag("VolumeRenderingObject").GetComponent<VolumeRenderedObject>();
         }
-        catch(Exception e)
+        catch (Exception e)
         {
             Debug.Log("No Volume Object now in the scene: " + e.Message);
         }
@@ -98,6 +97,14 @@ public class CylinderUI : MonoBehaviour
         change_panel_status(
             NeedlingPanel.gameObject,
             (int)CylinderPanels.NEEDLING_PANEL);
+        try
+        {
+            NeedlingPanel.GetComponent<NeedlingEdit>().OnChangePanelStatus(mIsPanelOn[(int)CylinderPanels.NEEDLING_PANEL]);
+        }catch(Exception e)
+        {
+            //do nothing
+        }
+
     }
     public void OnChangeDrawing()
     {

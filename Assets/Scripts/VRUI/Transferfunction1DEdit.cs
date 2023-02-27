@@ -1,6 +1,3 @@
-using Oculus.Interaction;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityVolumeRendering;
@@ -9,11 +6,11 @@ using UnityVolumeRendering;
 [ExecuteInEditMode]
 public class Transferfunction1DEdit : MonoBehaviour
 {
-    public RayInteractorCursorVisual RightControllerCursor;
     public Transform ColorSchemeDropDownObj;
-    public Transform MeshTransform;
+    //public Transform MeshTransform;
     public Image tfGUIImage;
     public Image PaletteImage;
+    public RayInteractableHandler PalettePanel;
 
     public CylinderUI RootUIManager;
 
@@ -21,11 +18,6 @@ public class Transferfunction1DEdit : MonoBehaviour
     private Material tfPaletteGUIMat = null;
 
     private Texture2D histTex = null;
-
-    // Controlling Points
-    private int movingColPointIndex = -1;
-    private int movingAlphaPointIndex = -1;
-    private int selectedColPointIndex = -1;
     private void Start()
     {
         tfGUIMat = Resources.Load<Material>("Materials/TransferFunctionGUIMat");
@@ -68,15 +60,14 @@ public class Transferfunction1DEdit : MonoBehaviour
             OnColorSchemeChanged(ColorSchemeDropDown.value);
         });
     }
-    private void ClearSelection()
-    {
-        movingColPointIndex = -1;
-        movingAlphaPointIndex = -1;
-        selectedColPointIndex = -1;
-    }
+    //private void ClearSelection()
+    //{
+    //    movingColPointIndex = -1;
+    //    movingAlphaPointIndex = -1;
+    //    selectedColPointIndex = -1;
+    //}
     public void OnResetButtonClicked()
     {
-
         var tf = new TransferFunction();
         tf.alphaControlPoints.Add(new TFAlphaControlPoint(0.2f, 0.0f));
         tf.alphaControlPoints.Add(new TFAlphaControlPoint(0.8f, 1.0f));
@@ -84,8 +75,8 @@ public class Transferfunction1DEdit : MonoBehaviour
         
         if (RootUIManager.mTargetVolume)
             RootUIManager.mTargetVolume.SetTransferFunction(tf);
-
-        ClearSelection();
+        
+        PalettePanel.OnReset();
     }
 
     public void OnColorSchemeChanged(int value) {
@@ -94,7 +85,5 @@ public class Transferfunction1DEdit : MonoBehaviour
     }
     public void OnPaletteCanvasClicked()
     {
-        //Debug.LogWarning("=====================" + RightControllerCursor.transform.position);
-        //Debug.LogWarning("=========start============" + MeshTransform.position);
     }
 }

@@ -325,7 +325,6 @@ namespace UnityVolumeRendering
                 acuNeedleObj.name = "AcuNeedle";
                 acuNeedleObj.GetComponent<AcuNeedle>().Initialize(objects[0]);
             }
-                //objects[0].CreateSlicingPlane();
         }
 
 

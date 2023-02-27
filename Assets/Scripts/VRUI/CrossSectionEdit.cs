@@ -15,6 +15,8 @@ public class CrossSectionEdit : MonoBehaviour
 
     protected Sprite InvisibleSprite;
     protected Sprite VisibleSprite;
+    protected Texture2D TargetTex;
+    protected Texture2D unTargetTex;
 
     protected void Initialize()
     {
@@ -28,7 +30,7 @@ public class CrossSectionEdit : MonoBehaviour
         });
 
         VisibilityBtn.onClick.AddListener(delegate {
-            OnChangePlaneStatus();
+            OnChangeVisibilityStatus();
         });
     }
     protected void AddOptionToTargetDropDown(string entry)
@@ -70,6 +72,8 @@ public class CrossSectionEdit : MonoBehaviour
 
     private void Start()
     {
+        TargetTex = Resources.Load<Texture2D>("Textures/CrossSectionPlaneTexture");
+        unTargetTex = Resources.Load<Texture2D>("Textures/CrossSectionPlaneTextureDim");
         Initialize();
     }
 
@@ -91,19 +95,41 @@ public class CrossSectionEdit : MonoBehaviour
         }
     }
 
-    protected virtual void OnChangePlaneStatus()
+    protected virtual void OnChangeVisibilityStatus()
     {
         if (mTargetId < 0) return;
 
         mSectionVisibilities[mTargetId] = !mSectionVisibilities[mTargetId];
+        RootUIManager.mTargetVolume.m_cs_planes[mTargetId].parent.parent.gameObject.SetActive(mSectionVisibilities[mTargetId]);
         RootUIManager.mTargetVolume.m_cs_planes[mTargetId].gameObject.SetActive(mSectionVisibilities[mTargetId]);
-
         UpdateSprite(mSectionVisibilities[mTargetId]);
+    }
+
+    protected virtual void UpdateSnapableObjectStatus(int value)
+    {
+        //disable current one
+        if (mTargetId >= 0)
+        {
+            RootUIManager.mTargetVolume.m_cs_planes[mTargetId].GetComponent<MeshRenderer>().material.SetTexture("_MainTex", unTargetTex);
+            RootUIManager.mTargetVolume.m_cs_planes[mTargetId].parent.parent.Find("HandGrabInteractable").gameObject.SetActive(false);
+        }
+        //enable the new one
+        if (value >= 0)
+        {
+            RootUIManager.mTargetVolume.m_cs_planes[value].GetComponent<MeshRenderer>().material.SetTexture("_MainTex", TargetTex);
+            RootUIManager.mTargetVolume.m_cs_planes[value].parent.parent.Find("HandGrabInteractable").gameObject.SetActive(true);
+        }
     }
 
     protected void DropdownValueChanged(int value)
     {
+        if ((value-1) == mTargetId) return;
+        //update the interactable status
+        UpdateSnapableObjectStatus(value - 1);
+
+        //Update visibility status of the current plane
+        UpdateSprite(value < 1 ? true : mSectionVisibilities[value-1]);
+
         mTargetId = value - 1;
-        UpdateSprite(mTargetId<0? true:mSectionVisibilities[mTargetId]);
     }
 }

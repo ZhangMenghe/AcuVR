@@ -8,6 +8,8 @@ public class DisplayRackFactory//:MonoBehaviour
     public enum DisplayRacks
     {
         ROOM_LEFT_BOARD = 0,
+        CURVE_LEFT_BOARD,
+        CURVE_RIGHT_BOARD,
         DISPLAY_RACK_END
     }
     //public static Transform LeftBoardObj;
@@ -17,78 +19,83 @@ public class DisplayRackFactory//:MonoBehaviour
     private static List<bool>[] visibilityLists = Enumerable.Repeat(new List<bool>(), (int)DisplayRacks.DISPLAY_RACK_END).ToArray();
     private static List<Material>[] frameMaterials = Enumerable.Repeat(new List<Material>(), (int)DisplayRacks.DISPLAY_RACK_END).ToArray();
     private static List<Transform>[] frameList = Enumerable.Repeat(new List<Transform>(), (int)DisplayRacks.DISPLAY_RACK_END).ToArray();
-    private static List<Transform> slicingPlaneList = new List<Transform>();
+    private static List<UnityVolumeRendering.SlicingPlane> slicingPlaneList = new List<UnityVolumeRendering.SlicingPlane>();
 
-    private static readonly Vector3 LeftUpperCorner=new Vector3(-1.5f, -1.0f,  -0.1f);
+    private static readonly Vector3 LeftUpperCorner = new Vector3(-1.5f, -1.0f,  -0.1f);
     private static readonly Vector2 FrameGap = new Vector2(1.0f, -1.0f);
 
-    //public static readonly Vector3[] mDisplayPoses = new Vector3[] {
-    //        new Vector3(-0.6f, 0.4f, -0.1f), new Vector3(.0f, 0.4f, .0f), new Vector3(0.6f, 0.4f, .0f),
-    //        new Vector3(-0.6f, -0.2f, .0f), new Vector3(.0f, -0.2f, .0f), new Vector3(0.6f, -0.2f, .0f)
-    //    };
     public static readonly Vector3 mUnitScale = Vector3.one * 0.8f;
 
-    private static readonly Vector3[] RACK_POSITIONS = {
+    private static readonly Vector3[] BOARD_INITIAL_POSITIONS = {
         new Vector3(2.5f, 2.0f, 1.3f),
-        new Vector3(0.12f, 2.0f, 2.6f),
-        new Vector3(2.4f, 2.0f, -1.3f),
+        new Vector3(-0.8f, 1.1f, 1.25f),
+        new Vector3(0.8f, 1.1f, -1.4f),
     };
-    private static readonly Quaternion[] RACK_ROTATES = {
+    private static readonly Quaternion[] BOARD_INITIAL_ROTATIONS = {
         Quaternion.Euler(.0f, 60.0f, .0f),
-        Quaternion.identity,
-        Quaternion.Euler(.0f, 120.0f, .0f)
+        Quaternion.Euler(.0f, -30.0f, .0f),
+        Quaternion.Euler(.0f, 150.0f, .0f)
     };
-    private static List<string> m_rack_names = new List<string>();
-    public static GameObject CreateDisplayRack(string rack_name)
+    public static ref Transform GetDisplayRack(DisplayRacks rackId)
     {
-        GameObject display_rack = GameObject.Instantiate(Resources.Load<GameObject>("Prefabs/DisplayRackPrefab"));
+        return ref DisplayRackObjs[(int)rackId];
+    }
+    public static void SetDisplayRackVisibility(DisplayRacks rackId, bool visible)
+    {
+        DisplayRackObjs[(int)rackId].gameObject.SetActive(visible);
+    }
+    //private static List<string> m_rack_names = new List<string>();
+    private static Transform CreateDisplayRack(in Transform parent_transform, DisplayRacks rackId, string rack_name)
+    {
+        var display_rack = GameObject.Instantiate(Resources.Load<GameObject>("Prefabs/DisplayRackPrefab")).transform;
         display_rack.name = rack_name;
 
-        display_rack.transform.localScale = Vector3.one;
-        display_rack.transform.localPosition = RACK_POSITIONS[m_rack_names.Count % 3];
-        display_rack.transform.localRotation = RACK_ROTATES[m_rack_names.Count % 3];
+        display_rack.parent = parent_transform;
+        display_rack.localScale = Vector3.one * 2;
+        display_rack.localPosition = BOARD_INITIAL_POSITIONS[(int)rackId];
+        display_rack.localRotation = BOARD_INITIAL_ROTATIONS[(int)rackId];
 
-
-        var title = display_rack.transform.Find("Title");
+        var title = display_rack.Find("Title");
         title.GetComponent<TMPro.TextMeshPro>().SetText(rack_name);
-
-        m_rack_names.Add(rack_name);
         return display_rack;
     }
-    public static GameObject CreateMagnificationViewRack(string rack_name, float ratio)
-    {
-        GameObject display_rack = CreateDisplayRack(rack_name);
+    //public static GameObject CreateMagnificationViewRack(string rack_name, float ratio)
+    //{
+    //    GameObject display_rack = CreateDisplayRack(rack_name);
         
-        GameObject quad = GameObject.CreatePrimitive(PrimitiveType.Quad);
+    //    GameObject quad = GameObject.CreatePrimitive(PrimitiveType.Quad);
         
-        quad.transform.parent = display_rack.transform;
-        quad.transform.localPosition = new Vector3(.0f, 0.15f, .0f);
-        quad.transform.localScale = new Vector3(ratio, 1.0f, 1.0f);
-        quad.transform.localRotation = Quaternion.identity;
+    //    quad.transform.parent = display_rack.transform;
+    //    quad.transform.localPosition = new Vector3(.0f, 0.15f, .0f);
+    //    quad.transform.localScale = new Vector3(ratio, 1.0f, 1.0f);
+    //    quad.transform.localRotation = Quaternion.identity;
 
-        quad.GetComponent<MeshRenderer>().sharedMaterial = Resources.Load<Material>("RenderTextures/AcuNeedleRT");
-        return display_rack;
-    }
+    //    quad.GetComponent<MeshRenderer>().sharedMaterial = Resources.Load<Material>("RenderTextures/AcuNeedleRT");
+    //    return display_rack;
+    //}
 
-    public static void AttachToRack(DisplayRacks rackId, string rack_name) {
-        if(rackId == DisplayRacks.ROOM_LEFT_BOARD)
+    public static bool AttachToRack(DisplayRacks rackId, string rack_name) {
+        if (DisplayRackObjs[(int)rackId]) return false;
+        Transform StaticParent = GameObject.Find("Static").transform;
+
+        if (rackId == DisplayRacks.ROOM_LEFT_BOARD)
         {
+            DisplayRackObjs[(int)rackId] = StaticParent.Find("LeftBoard");
             if (!DisplayRackObjs[(int)rackId])
             {
-                Transform StaticParent = GameObject.Find("Static").transform;
-                DisplayRackObjs[(int)rackId] = StaticParent.Find("LeftBoard");
-                if (!DisplayRackObjs[(int)rackId])
-                {
-                    DisplayRackObjs[(int)rackId] = GameObject.Instantiate(Resources.Load<GameObject>("Prefabs/LeftBoard")).transform;
-                    DisplayRackObjs[(int)rackId].parent = GameObject.Find("Static").transform;
-                    DisplayRackObjs[(int)rackId].name = "LeftBoard";
-                }
+                DisplayRackObjs[(int)rackId] = GameObject.Instantiate(Resources.Load<GameObject>("Prefabs/LeftBoard")).transform;
+                DisplayRackObjs[(int)rackId].parent = GameObject.Find("Static").transform;
+                DisplayRackObjs[(int)rackId].name = "LeftBoard";
             }
-
-            isDisplayRackAttached[(int)rackId] = true;
             var title = DisplayRackObjs[(int)rackId].Find("Title");
             title.GetComponent<TMPro.TextMeshPro>().SetText(rack_name);
+        }else
+        {
+            DisplayRackObjs[(int)rackId] = CreateDisplayRack(StaticParent, rackId, rack_name);
         }
+
+        isDisplayRackAttached[(int)rackId] = true;
+        return true;
     }
 
     public static void DeAttachFromRack(DisplayRacks rackId)
@@ -98,7 +105,7 @@ public class DisplayRackFactory//:MonoBehaviour
             isDisplayRackAttached[(int)rackId] = false;
             if (DisplayRackObjs[(int)rackId])
             {
-                GameObject.Destroy(DisplayRackObjs[(int)rackId].gameObject);
+                GameObject.DestroyImmediate(DisplayRackObjs[(int)rackId].gameObject);
                 DisplayRackObjs[(int)rackId] = null;
             }
         }
@@ -128,19 +135,19 @@ public class DisplayRackFactory//:MonoBehaviour
         visibilityLists[(int)rackId].Add(true);
 
         if (rackId == DisplayRacks.ROOM_LEFT_BOARD)
-            slicingPlaneList.Add(slicingPlane.transform);
+            slicingPlaneList.Add(slicingPlane);
     }
     public static void RemoveFrame(DisplayRacks rackId, int targetId)
     {
         if (!isDisplayRackAttached[(int)rackId]) return;
 
-        GameObject.Destroy(frameList[(int)rackId][targetId]);
+        GameObject.Destroy(frameList[(int)rackId][targetId].gameObject);
         frameList[(int)rackId].RemoveAt(targetId);
         frameMaterials[(int)rackId].RemoveAt(targetId);
         visibilityLists[(int)rackId].RemoveAt(targetId);
         if (rackId == DisplayRacks.ROOM_LEFT_BOARD)
         {
-            GameObject.Destroy(slicingPlaneList[targetId]);
+            //GameObject.Destroy(slicingPlaneList[targetId]);
             slicingPlaneList.RemoveAt(targetId);
         }
     }
@@ -191,6 +198,7 @@ public class DisplayRackFactory//:MonoBehaviour
 
             for (int fid=0; fid<frameList[i].Count; fid++)
             {
+                if (!currFrameList[fid]) continue;
                 var canvasRenderer = currFrameList[fid].GetComponent<MeshRenderer>();
                 if (canvasRenderer != null)
                 {
@@ -198,11 +206,15 @@ public class DisplayRackFactory//:MonoBehaviour
                     else currFrameMats[fid].EnableKeyword("INVISIBLE");
 
                     currFrameMats[fid].DisableKeyword("OVERRIDE_MODEL_MAT");
-                    currFrameMats[fid].SetMatrix("_parentInverseMat", slicingPlaneList[fid].parent.worldToLocalMatrix);
+                    currFrameMats[fid].SetMatrix("_parentInverseMat",
+                                                    slicingPlaneList[fid].mParentTransform ? 
+                                                    slicingPlaneList[fid].mParentTransform.worldToLocalMatrix : slicingPlaneList[fid].transform.worldToLocalMatrix);
+
                     currFrameMats[fid].SetMatrix("_planeMat", Matrix4x4.TRS(
-                        slicingPlaneList[fid].position,
-                        slicingPlaneList[fid].rotation,
-                        slicingPlaneList[fid].parent ? slicingPlaneList[fid].parent.lossyScale : slicingPlaneList[fid].lossyScale));
+                        slicingPlaneList[fid].transform.position,
+                        slicingPlaneList[fid].transform.rotation,
+                        slicingPlaneList[fid].mParentTransform ? slicingPlaneList[fid].mParentTransform.lossyScale : slicingPlaneList[fid].transform.lossyScale));
+
                     canvasRenderer.sharedMaterial = currFrameMats[fid];
                 }
             }

@@ -73,24 +73,51 @@ namespace UnityVolumeRendering
         public List<Transform> m_cs_planes { get; set; } = new List<Transform>();
         public List<Transform> SlicingPlaneList { get; set; } = new List<Transform>();
 
+        public static bool isSnapAble = true;
+
         public void CreateCrossSectionPlane()
         {
-            GameObject quad = GameObject.Instantiate((GameObject)Resources.Load("Prefabs/CrossSectionPlane"));
-            quad.name = "CSPlane" + m_cs_planes.Count;
+            Transform cross_plane;
+            if (isSnapAble)
+            {
+                cross_plane = GameObject.Instantiate((GameObject)Resources.Load("Prefabs/AAASnapCrossSectionPlane")).transform;
 
-            quad.transform.parent = transform;
-            quad.transform.localRotation = Quaternion.Euler(90.0f, 0.0f, 0.0f);
-            quad.transform.localPosition = Vector3.zero;
-            quad.transform.localScale = Vector3.one * 1.2f;
+                cross_plane.parent = transform;
+                cross_plane.localRotation = Quaternion.identity;
+                cross_plane.localPosition = Vector3.zero;
+                cross_plane.localScale = Vector3.one;
 
-            m_cs_planes.Add(quad.transform);
+                //cross_plane.rotation = transform.rotation;
+                //cross_plane.position = transform.position;
+                //cross_plane.localScale = transform.localScale;
+
+                Transform csplane_mesh = cross_plane.Find("CSPlaneObj").Find("CSPlaneMesh");
+                csplane_mesh.localRotation = Quaternion.Euler(90.0f, 0.0f, 0.0f);
+                csplane_mesh.localPosition = Vector3.zero;
+                csplane_mesh.localScale = Vector3.one * 1.2f;
+                m_cs_planes.Add(csplane_mesh);
+            }
+            else
+            {
+                cross_plane = GameObject.Instantiate((GameObject)Resources.Load("Prefabs/CrossSectionPlane")).transform;
+                cross_plane.parent = transform;
+
+                m_cs_planes.Add(cross_plane);
+
+                cross_plane.localRotation = Quaternion.Euler(90.0f, 0.0f, 0.0f);
+                cross_plane.localPosition = Vector3.zero;
+                cross_plane.localScale = Vector3.one * 1.2f;
+            }
+            //GameObject quad = GameObject.Instantiate((GameObject)Resources.Load("Prefabs/CrossSectionPlane"));
+            cross_plane.name = "CSPlane" + m_cs_planes.Count;
             meshRenderer.sharedMaterial.EnableKeyword("CUTOUT_PLANE");
         }
         public void DeleteCrossSectionPlaneAt(int TargetId)
         {
             if (TargetId < m_cs_planes.Count)
             {
-                Destroy(m_cs_planes[TargetId].gameObject);
+                Destroy(isSnapAble? m_cs_planes[TargetId].parent.parent.gameObject:
+                    m_cs_planes[TargetId].gameObject);
                 m_cs_planes.RemoveAt(TargetId);
             }
         }
@@ -108,55 +135,51 @@ namespace UnityVolumeRendering
         public void CreateSlicingPlane()
         {
             //check the list
-            check_slicing_planes();
-            
-            var slicePlaneObj = GameObject.Instantiate(Resources.Load<GameObject>("Prefabs/SlicingPlane")).transform;
-            slicePlaneObj.parent = transform;
-            var slicing_plane = slicePlaneObj.GetComponent<SlicingPlane>();
+            if(!isSnapAble)check_slicing_planes();
+
+            Transform slicePlaneObj;
+            SlicingPlane slicing_plane;
+            if (isSnapAble)
+            {
+                slicePlaneObj = GameObject.Instantiate(Resources.Load<GameObject>("Prefabs/AAASnapSlicingPlaneBounded")).transform;
+
+                slicePlaneObj.name = "SLPlane" + SlicingPlaneList.Count;
+                slicePlaneObj.parent = transform;
+
+                //AAASnapSlicingPlane
+                slicePlaneObj.localRotation = Quaternion.identity;
+                slicePlaneObj.localPosition = Vector3.zero;
+                slicePlaneObj.localScale = Vector3.one;
+
+                slicing_plane = slicePlaneObj.Find("SlicingPlaneObj").Find("SlicingPlaneMesh").gameObject.AddComponent<SlicingPlane>();
+                slicing_plane.mPlaneBoundaryRenderer = slicing_plane.transform.Find("CollidingBBox").GetComponent<MeshRenderer>();
+            }
+            else
+            {
+                slicePlaneObj = GameObject.Instantiate(Resources.Load<GameObject>("Prefabs/SlicingPlane")).transform;
+                slicePlaneObj.parent = transform;
+                slicing_plane = slicePlaneObj.gameObject.AddComponent<SlicingPlane>();
+            }
+            slicing_plane.mParentTransform = transform;
+
             slicing_plane.Initialized(
-                "SLPlane" + SlicingPlaneList.Count,
+                isSnapAble?"":"SLPlane" + SlicingPlaneList.Count,
                 dataset.GetDataTexture(), 
                 transferFunction.GetTexture()
                 );
-            SlicingPlaneList.Add(slicePlaneObj);
+            SlicingPlaneList.Add(slicing_plane.transform);
             DisplayRackFactory.AddFrame(DisplayRackFactory.DisplayRacks.ROOM_LEFT_BOARD, slicing_plane);
-
-            //return slicing_plane;
-
-            //slicePlaneObj.name = "SLPlane" + m_sl_planes.Count;
-
-            //slicePlaneObj.parent = transform;
-            //slicePlaneObj.localRotation = Quaternion.identity;
-            //slicePlaneObj.localPosition = Vector3.zero;
-            //slicePlaneObj.localScale = Vector3.one * 0.1f;
-
-            ////MeshRenderer sliceMeshRend = slicePlaneObj.GetComponent<MeshRenderer>();
-            ////sliceMeshRend.material = new Material(sliceMeshRend.sharedMaterial);
-            //Material sliceMat = slicePlaneObj.GetComponent<MeshRenderer>().sharedMaterial;
-            //sliceMat.SetTexture("_DataTex", dataset.GetDataTexture());
-            //sliceMat.SetTexture("_TFTex", transferFunction.GetTexture());
-
-            //var slicing_plane_rack = GameObject.Find("Slicing Planes");
-            //if (slicing_plane_rack == null)
-            //{
-            //    slicing_plane_rack = DisplayRackFactory.CreateDisplayRack("Slicing Planes");
-            //}
-
-            //slicePlane.CreatePolySlicingPlane(
-            //    slicing_plane_rack.transform,
-            //    dataset.GetDataTexture(), transferFunction.GetTexture(),
-            //    m_sl_planes.Count,
-            //    DisplayRackFactory.mDisplayPoses[m_sl_planes.Count % 5], DisplayRackFactory.mUnitScale);
             ////MENGHE: add drawing plane at the right place
             ////slicePlane.AddAnnotationPlane(Resources.Load<RenderTexture>("RenderTextures/DrawRT"));
-            //m_sl_planes.Add(slicePlane);
         }
 
         public void DeleteSlicingPlaneAt(int TargetId)
         {
             if (TargetId < SlicingPlaneList.Count)
             {
-                Destroy(SlicingPlaneList[TargetId].gameObject);
+                Destroy(isSnapAble ? SlicingPlaneList[TargetId].parent.parent.gameObject :
+    SlicingPlaneList[TargetId].gameObject);
+
                 SlicingPlaneList.RemoveAt(TargetId);
             }
             //MENGHE: REMOVE THE ONE ON SHLF
