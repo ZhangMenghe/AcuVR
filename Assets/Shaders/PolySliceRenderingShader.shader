@@ -21,8 +21,6 @@ Shader "VolumeRendering/PolySliceRenderingShader"
             #pragma fragment frag
             #pragma multi_compile __ ANNOTATION_ON
             #pragma multi_compile __ OVERRIDE_MODEL_MAT
-            #pragma multi_compile __ INVISIBLE
-
 
             #include "UnityCG.cginc"
 
@@ -73,9 +71,6 @@ Shader "VolumeRendering/PolySliceRenderingShader"
                 //return float4(1.0f, .0f, .0f, 1.0f);
                 // Sample the volume texture.
                 float dataVal = tex3D(_DataTex, dataCoord);
-#ifdef INVISIBLE
-                return float4(dataVal, dataVal, dataVal, 1.0);
-#endif
                 float4 col = tex2D(_TFTex, float2(dataVal, 0.0f));
                 col.a = 1.0f;
 

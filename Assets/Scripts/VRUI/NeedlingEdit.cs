@@ -1,8 +1,11 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityVolumeRendering;
 
-public class NeedlingEdit : CrossSectionEdit
+public class NeedlingEdit : BasicMutipleTargetUI
 {
+    public VolumeDataEdit VolumeManager;
+
     //MENGHE: ENABLE/DISABLE Controller and ControllerHand?
     public Transform OVRController;
     public Transform OVRControllerHands;
@@ -37,10 +40,11 @@ public class NeedlingEdit : CrossSectionEdit
 
     public void OnAddNeedle()
     {
-        mSectionVisibilities.Add(true);
+        mIsVisibles.Add(true);
+        mTotalId++;
 
-        var acuNeedleObj = GameObject.Instantiate(Resources.Load<GameObject>("Prefabs/AcuNeedlePinch")).transform;
-        acuNeedleObj.name = "Needle " + mSectionVisibilities.Count.ToString();
+        var acuNeedleObj = GameObject.Instantiate(Resources.Load<GameObject>("Prefabs/AcuNeedle1")).transform;
+        acuNeedleObj.name = "Needle " + mTotalId;
         //acuNeedleObj.position = new Vector3(-1.3f, 1.5f, -1.0f);
         acuNeedleObj.parent = mAcuNeedleRoot;
         acuNeedleObj.position = Camera.main.transform.position + new Vector3(.0f, .0f, 0.3f);
@@ -49,6 +53,7 @@ public class NeedlingEdit : CrossSectionEdit
 
         mNeedleObjs.Add(acuNeedleObj);
         AddOptionToTargetDropDown(acuNeedleObj.name);
+        DropdownValueChanged(mIsVisibles.Count);
     }
     public void OnRemoveNeedle()
     {
@@ -69,13 +74,16 @@ public class NeedlingEdit : CrossSectionEdit
     protected override void OnChangeVisibilityStatus()
     {
         if (mTargetId < 0) return;
-        mSectionVisibilities[mTargetId] = !mSectionVisibilities[mTargetId];
-        mNeedleObjs[mTargetId].gameObject.SetActive(mSectionVisibilities[mTargetId]);
-        UpdateSprite(mSectionVisibilities[mTargetId]);
+        base.OnChangeVisibilityStatus();
+
+        //mIsVisibles[mTargetId] = !mIsVisibles[mTargetId];
+        //mNeedleObjs[mTargetId].gameObject.SetActive(mIsVisibles[mTargetId]);
+        ////UpdateSprite(mIsVisibles[mTargetId]);
+        //VRUICommonUtils.SwapSprite(ref VisibilityBtn);
     }
     protected override void UpdateSnapableObjectStatus(int value)
     {
-        //maybe disable other needles
+        //maybe disable other needles?
     }
 
     private void OnDestroy()
@@ -85,10 +93,10 @@ public class NeedlingEdit : CrossSectionEdit
 
     private void Update()
     {
-        if (RootUIManager.mTargetVolume)
+        if (VolumeObjectFactory.gTargetVolume)
         {
             for (int i = 0; i < mNeedleObjs.Count; i++)
-                mNeedleObjs[i].localScale = Vector3.one * RootUIManager.mTargetVolume.GetVolumeUnifiedScale();
+                mNeedleObjs[i].localScale = Vector3.one * VolumeObjectFactory.gTargetVolume.GetVolumeUnifiedScale();
         }
     }
 }

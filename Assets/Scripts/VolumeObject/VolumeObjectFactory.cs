@@ -5,31 +5,52 @@ namespace UnityVolumeRendering
 {
     public class VolumeObjectFactory
     {
+        public static VolumeRenderedObject gTargetVolume { get; set; } = null;
+        public static bool gHandGrabbleDirty = false;
+        public static bool gVolumeScaleDirty = false;
+
+        public static readonly Vector3 DEFAULT_VOLUME_POSITION = new Vector3(.5f, 1.5f, .5f);
+        private static readonly Quaternion DEFAULT_VOLUME_ROTATION = Quaternion.Euler(-90.0f, 0.0f, 180.0f);
+        public static void OnWorkingTableChange(bool isOn) {
+            gTargetVolume.transform.parent.gameObject.GetComponent<Rigidbody>().isKinematic = !isOn;
+        }
+        public static void GatherObjectsInScene()
+        {
+            var volumes = GameObject.FindGameObjectsWithTag("VolumeRenderingObject");
+            if (volumes.Length > 0) gTargetVolume = volumes[0].GetComponent<VolumeRenderedObject>();
+        }
         //MENGHE:SNAPABLE T ONLY IN VR
+        public static void ResetTargetVolume()
+        {
+            if (!gTargetVolume) return;
+            gTargetVolume.transform.parent.rotation = Quaternion.identity;
+            gTargetVolume.transform.parent.position = DEFAULT_VOLUME_POSITION;
+            gTargetVolume.onReset();
+        }
         public static VolumeRenderedObject CreateObject(VolumeDataset dataset, bool Snapable = true)
         {
             Transform VolumeObject;
             Transform meshContainer;
             if (Snapable)
             {
-                Transform snapable_obj = GameObject.Instantiate((GameObject)Resources.Load("Prefabs/AAHSnapVolume")).transform;
+                Transform snapable_obj = GameObject.Instantiate((GameObject)Resources.Load("Prefabs/AAHVolume")).transform;
                 snapable_obj.name = "VolumeRenderedObject_" + dataset.datasetName;
                 snapable_obj.rotation = Quaternion.identity;
-                snapable_obj.position = new Vector3(.0f, 1.5f, .0f);
+                snapable_obj.position = DEFAULT_VOLUME_POSITION;
 
-                VolumeObject = snapable_obj.Find("VolumeObject");
-                VolumeObject.localRotation = Quaternion.Euler(-90.0f, 0.0f, 180.0f);
+                VolumeObject = snapable_obj.Find("TargetObject").Find("VolumeObject");
+                VolumeObject.localRotation = DEFAULT_VOLUME_ROTATION;
                 VolumeObject.localPosition = Vector3.zero;
 
-                meshContainer = VolumeObject.Find("VolumeContainer");
+                meshContainer = VolumeObject.Find("Mesh");
             }
             else
             {
                 VolumeObject = new GameObject("VolumeRenderedObject_" + dataset.datasetName).transform;
                 VolumeObject.tag = "VolumeRenderingObject";
-                VolumeObject.rotation = Quaternion.Euler(-90.0f, 0.0f, 180.0f);
+                VolumeObject.rotation = DEFAULT_VOLUME_ROTATION;
                 //MENGHE: where to put?
-                VolumeObject.position = new Vector3(.0f, 1.5f, .0f);
+                VolumeObject.position = DEFAULT_VOLUME_POSITION;
 
                 meshContainer = GameObject.Instantiate((GameObject)Resources.Load("Prefabs/VolumeContainer")).transform;
                 meshContainer.parent = VolumeObject;

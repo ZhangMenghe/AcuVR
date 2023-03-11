@@ -6,86 +6,86 @@ using UnityVolumeRendering;
 
 public class RayInteractableHandler : MonoBehaviour
 {
-    public CylinderUI RootUIManager;
+    public VolumeDataEdit VolumeManager;
     public RayInteractorCursorVisual RightControllerCursor;
 
-    private Transform mContentCanvas;
-    private Transform mMesh;
-    private List<Transform> mHandles = new List<Transform>();
+    protected Transform mContentCanvas;
+    protected Transform mMesh;
+    protected List<Transform> mHandles = new List<Transform>();
 
-    private int mTargetHandle = -1;
-    private int mHightlightHandleIndex;
+    protected int mTargetHandle = -1;
+    protected int mHightlightHandleIndex;
 
-    private Vector2 mHorizontalBoarderLimit;
-    private Vector2 mVerticalBoarderLimit;
+    protected Vector2 mHorizontalBoarderLimit;
+    protected Vector2 mVerticalBoarderLimit;
 
-    private Vector2 mOuterSize;
-    private Vector2 mInnerSize;
-    private Vector2 mInnerSizeInv;
-    private Vector2 mInnerScaleInv;
-    private Vector2 mHandleSize = Vector2.zero;
+    protected Vector2 mOuterSize;
+    protected Vector2 mInnerSize;
+    protected Vector2 mInnerSizeInv;
+    protected Vector2 mInnerScaleInv;
+
+    protected Vector2 mCursorPosInCanvas;
+
+    public static bool TFDirty = false;
 
     //FENGYIN!! PLEASE DO NOT TOUCH, OTHERWISE IT WON'T ALIGN
     protected readonly float Comp = 0.06f;
-    protected void ChangeHighlightHandle(int index, bool highlight)
+    protected readonly float CompY = -0.45f;
+
+    private void ChangeHighlightHandle(int index, bool highlight)
     {
         if (index < 0 || index > mHandles.Count - 1) return;
         mHandles[index].Find("highlight").gameObject.SetActive(highlight);
     }
-    public void OnAddHandle()
+
+    protected void UpdateHighlightHandle(int new_highlight)
     {
-        if (!RootUIManager.mTargetVolume) return;
-        
-        Color newColour = Color.HSVToRGB(Random.Range(0.0f, 1.0f), 1.0f, 1.0f);
-
-        RootUIManager.mTargetVolume.transferFunction.colourControlPoints.Add(new TFColourControlPoint(Mathf.Clamp(0.5f, 0.0f, 1.0f), newColour));
-        RootUIManager.mTargetVolume.transferFunction.GenerateTexture();
-        AddHandleAtPosition(0.5f * mInnerSize.x, newColour);
-
-        //reset last highlight handle
         ChangeHighlightHandle(mHightlightHandleIndex, false);
-        mHightlightHandleIndex = mHandles.Count - 1;
+        mHightlightHandleIndex = new_highlight;
         ChangeHighlightHandle(mHightlightHandleIndex, true);
     }
-    public void OnRemoveHandle()
+    protected void RemoveHandleAt(int index)
     {
-        if (mHightlightHandleIndex < 0) return;
-
-        RootUIManager.mTargetVolume.transferFunction.colourControlPoints.RemoveAt(mHightlightHandleIndex);
-        RootUIManager.mTargetVolume.transferFunction.GenerateTexture();
-        GameObject.Destroy(mHandles[mHightlightHandleIndex].gameObject);
-        mHandles.RemoveAt(mHightlightHandleIndex);
-        mHightlightHandleIndex = -1;
+        GameObject.Destroy(mHandles[index].gameObject);
+        mHandles.RemoveAt(index);
     }
 
-    public void OnReset()
+    public virtual void OnReset()
+    {
+        ClearHandles();
+    }
+    
+    protected void ClearHandles()
     {
         mTargetHandle = -1; mHightlightHandleIndex = -1;
         foreach (Transform handle in mHandles) GameObject.Destroy(handle.gameObject);
         mHandles.Clear();
-
-        foreach (var point in RootUIManager.mTargetVolume.transferFunction.colourControlPoints)
-            AddHandleAtPosition(point.dataValue * mInnerSize.x, point.colourValue);
-        RootUIManager.mTargetVolume.transferFunction.GenerateTexture();
     }
 
-    private bool CursorHitObject(Vector3 world_pos, in RectTransform rt)
+    protected bool CursorHitObject(Vector2 cursorPos, in RectTransform rt, bool checkX, bool checkY)
     {
-        float xPosNormalized = (mMesh.transform.InverseTransformPoint(world_pos).x * mInnerScaleInv.x + 0.5f)* mOuterSize.x;
-        xPosNormalized += Comp * (mOuterSize.x * 0.5f - xPosNormalized);
-
-        float rt_anchorx = rt.anchoredPosition.x + mHorizontalBoarderLimit.x;
-        float sz = rt.rect.width * 0.5f;
-        return (xPosNormalized >= rt_anchorx-sz) && (xPosNormalized <= rt_anchorx + sz);
+        if (checkX)
+        {            
+            float rt_anchorx = rt.anchoredPosition.x + mHorizontalBoarderLimit.x;
+            float sz = rt.rect.width * 0.5f;
+            if (cursorPos.x < rt_anchorx - sz || cursorPos.x > rt_anchorx + sz) return false;
+        }
+        if (checkY)
+        {
+            float rt_anchory = rt.anchoredPosition.y + mVerticalBoarderLimit.x;
+            float sz = rt.rect.height * 0.5f;
+            if (cursorPos.y < rt_anchory - sz || cursorPos.y > rt_anchory + sz) return false;
+        }
+        return true;
     }
 
-    private void AddHandleAtPosition(float pos, Color color)
+    //protected void AddHandleAtPosition(float pos, Color color)
+    protected void AddHandleAtPosition(string HandlePrefabPath, Vector3 anchorPos, Color color)
     {
-        var handle = GameObject.Instantiate(Resources.Load<GameObject>("Prefabs/PaletteHandle")).transform;
-        if (mHandleSize.x == 0) mHandleSize = handle.GetComponent<RectTransform>().rect.size;
+        var handle = GameObject.Instantiate(Resources.Load<GameObject>(HandlePrefabPath)).transform;
         handle.parent = mContentCanvas;
 
-        handle.GetComponent<RectTransform>().anchoredPosition3D = new Vector3(pos, .0f, -0.001f);
+        handle.GetComponent<RectTransform>().anchoredPosition3D = anchorPos;//;
         handle.GetComponent<RectTransform>().localRotation = Quaternion.identity;
         handle.GetComponent<RectTransform>().localScale = Vector3.one;
         float H, S, V;
@@ -101,34 +101,43 @@ public class RayInteractableHandler : MonoBehaviour
         mMesh = this.transform.Find("Mesh");
 
         var outer_canvas = transform.Find("Canvas");
-        mContentCanvas = outer_canvas.Find("Palette");
+        mContentCanvas = outer_canvas.Find("Content");
 
         mOuterSize = outer_canvas.GetComponent<RectTransform>().rect.size;
         mInnerSize = mContentCanvas.GetComponent<RectTransform>().rect.size;
 
-        float boarder_size = (mOuterSize.x - mInnerSize.x) * 0.5f;
-        mHorizontalBoarderLimit = new Vector2(boarder_size, mOuterSize.x - boarder_size);
+        var boarder_size = (mOuterSize - mInnerSize) * 0.5f;
+        mHorizontalBoarderLimit = new Vector2(boarder_size.x, mOuterSize.x - boarder_size.x);
+        mVerticalBoarderLimit = new Vector2(boarder_size.y, mOuterSize.y - boarder_size.y);
+
         mInnerScaleInv = new Vector2(1.0f / mMesh.lossyScale.x, 1.0f/mMesh.lossyScale.y);
         mInnerSizeInv = new Vector2(1.0f / mInnerSize.x, 1.0f / mInnerSize.y);
     }
     private void Start()
     {
-        if (!RootUIManager.mTargetVolume) return;
+        if (!VolumeObjectFactory.gTargetVolume) return;
         OnReset();
     }
-    public void OnHover()
+
+    protected void CheckHandleHit(bool checkX = true, bool checkY = true)
     {
-        //paletteCanvas.GetComponent<Image>().color = new Color(1.0f, 1.0f, .0f);
-    }
-    public void OnUnHover()
-    {
-        //paletteCanvas.GetComponent<Image>().color = new Color(.0f, 1.0f, 1.0f);
-    }
-    public void OnSelect()
-    {
+        Vector2 CursorPos = Vector2.zero;
+        Vector3 CursorInMesh = mMesh.transform.InverseTransformPoint(RightControllerCursor.transform.position);
+        if (checkX)
+        {
+            CursorPos.x = (CursorInMesh.x * mInnerScaleInv.x + 0.5f) * mOuterSize.x;
+            CursorPos.x += Comp * (mOuterSize.x * 0.5f - CursorPos.x);
+        }
+        if (checkY)
+        {
+            CursorPos.y = (CursorInMesh.y * mInnerScaleInv.y + 0.5f) * mOuterSize.y;
+            CursorPos.y += CompY * (mOuterSize.y * 0.5f - CursorPos.y);
+        }
+
+        //check if any handle hits
         for(int i=0; i<mHandles.Count; i++)
         {
-            if (CursorHitObject(RightControllerCursor.transform.position, mHandles[i].GetComponent<RectTransform>()))
+            if (CursorHitObject(CursorPos, mHandles[i].GetComponent<RectTransform>(), checkX, checkY))
             {
                 ChangeHighlightHandle(mHightlightHandleIndex, false);
                 ChangeHighlightHandle(i, true);
@@ -137,27 +146,34 @@ public class RayInteractableHandler : MonoBehaviour
             }
         }
     }
-    public void OnUnSelect()
+    protected void UnTargetHandle()
     {
         if (mTargetHandle < 0) return;
-        //ChangeHighlightHandle(mTargetHandle, false);
         mTargetHandle = -1;
     }
-    private void Update()
+
+    protected bool CheckCursorPosInOuterCanvas(bool checkX, bool checkY)
     {
-        if (mTargetHandle < 0) return;
-
-        float xpos = (mMesh.transform.InverseTransformPoint(RightControllerCursor.transform.position).x * mInnerScaleInv.x + 0.5f) * mOuterSize.x;
-        xpos += Comp * (mOuterSize.x * 0.5f - xpos);
-
-        if (xpos < (mHorizontalBoarderLimit.x + mHandleSize.x * 0.5f) || xpos > (mHorizontalBoarderLimit.y- mHandleSize.x * 0.5f)) return;
-
-        var handle_pos = xpos - mHorizontalBoarderLimit.x;
-        mHandles[mTargetHandle].GetComponent<RectTransform>().anchoredPosition = new Vector2(handle_pos, .0f);
-
-        TFColourControlPoint colPoint = RootUIManager.mTargetVolume.transferFunction.colourControlPoints[mTargetHandle];
-        colPoint.dataValue = Mathf.Clamp(handle_pos * mInnerSizeInv.x, 0.0f, 1.0f);
-        RootUIManager.mTargetVolume.transferFunction.colourControlPoints[mTargetHandle] = colPoint;
-        RootUIManager.mTargetVolume.transferFunction.GenerateTexture();
+        if (checkX)
+        {
+            mCursorPosInCanvas.x = (mMesh.transform.InverseTransformPoint(RightControllerCursor.transform.position).x * mInnerScaleInv.x + 0.5f) * mOuterSize.x;
+            mCursorPosInCanvas.x += Comp * (mOuterSize.x * 0.5f - mCursorPosInCanvas.x);
+            if (mCursorPosInCanvas.x < mHorizontalBoarderLimit.x || mCursorPosInCanvas.x > mHorizontalBoarderLimit.y) return false;
+        }
+        if (checkY)
+        {
+            mCursorPosInCanvas.y = (mMesh.transform.InverseTransformPoint(RightControllerCursor.transform.position).y * mInnerScaleInv.y + 0.5f) * mOuterSize.y;
+            mCursorPosInCanvas.y += CompY * (mOuterSize.y * 0.5f - mCursorPosInCanvas.y);
+            if (mCursorPosInCanvas.y < mVerticalBoarderLimit.x || mCursorPosInCanvas.y > mVerticalBoarderLimit.y) return false;
+        }
+        return true;
+    }
+    private void LateUpdate()
+    {
+        if (TFDirty)
+        {
+            VolumeObjectFactory.gTargetVolume.transferFunction.GenerateTexture();
+            TFDirty = false;
+        }
     }
 }

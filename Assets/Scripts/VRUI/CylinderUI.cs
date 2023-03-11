@@ -1,68 +1,49 @@
 using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using UnityEngine;
-using UnityVolumeRendering;
 public class CylinderUI : MonoBehaviour
 {
     enum CylinderPanels
     {
-        LOAD_DATA_PANEL = 0,
-        VOLUME_PROPOERTIES_PANEL,
+        //LOAD_DATA_PANEL = 0,
+        VOLUME_PROPOERTIES_PANEL = 0,
         TRANSFER_FUNCTION_PANEL,
         SLICING_PANEL,
         CROSS_SECTION_PANEL,
         NEEDLING_PANEL,
+        WORKING_TABLE_PANEL,
         DRAW_PANEL,
         END_PANEL
     }
-    public Transform DataPanel = null;
+    //public Transform DataPanel = null;
     public Transform VolumePropoertiesPanel;
     public Transform TransferFunctionPanel;
     public Transform SlicingPanel;
     public Transform CrossSectionPanel;
     public Transform NeedlingPanel;
+    public Transform WorkingTable;
     public Transform DrawingPanel;
 
     private bool[] mIsPanelOn;
-
-    //public GameObject mTargetVolume = null;//  { get; private set; } = null;
-
-    public VolumeRenderedObject mTargetVolume { get; private set; } = null;
-
-    //public ref VolumeRenderedObject getTargetVolume()
-    //{
-    //    return ref mTargetVolume;
-    //}
+    //public VolumeRenderedObject mTargetVolume { get; private set; } = null;
     private void Awake()
     {
+        UnityVolumeRendering.VolumeObjectFactory.GatherObjectsInScene();
         mIsPanelOn = Enumerable.Repeat(false, (int)CylinderPanels.END_PANEL).ToArray();
-        VolumeRenderedObject.isSnapAble = true;
-
-        //MENGHE:!WORK ON THAT TO ENABLE MORE OBJS!!!!
-        try
-        {
-            mTargetVolume = GameObject.FindGameObjectWithTag("VolumeRenderingObject").GetComponent<VolumeRenderedObject>();
-        }
-        catch (Exception e)
-        {
-            Debug.Log("No Volume Object now in the scene: " + e.Message);
-        }
     }
     private void change_panel_status(in GameObject obj, int pos)
     {
         mIsPanelOn[pos] = !mIsPanelOn[pos];
         obj.SetActive(mIsPanelOn[pos]);
     }
-    public void OnChangeDataLoading()
-    {
-        if (!DataPanel) return;
-        change_panel_status(DataPanel.gameObject,
-            (int)CylinderPanels.LOAD_DATA_PANEL);
+    //public void OnChangeDataLoading()
+    //{
+    //    if (!DataPanel) return;
+    //    change_panel_status(DataPanel.gameObject,
+    //        (int)CylinderPanels.LOAD_DATA_PANEL);
         
-        //RuntimeFileBrowser.ShowOpenDirectoryDialog(OnOpenDICOMDatasetResult);
-    }
+    //    //RuntimeFileBrowser.ShowOpenDirectoryDialog(OnOpenDICOMDatasetResult);
+    //}
     public void OnChangeVolumePropoerties()
     {
         if (!VolumePropoertiesPanel) return;
@@ -113,55 +94,28 @@ public class CylinderUI : MonoBehaviour
             DrawingPanel.gameObject,
             (int)CylinderPanels.DRAW_PANEL);
     }
-    private void OnOpenDICOMDatasetResult(RuntimeFileBrowser.DialogResult result)
+
+    public void OnChangeWorkingTable()
     {
-        Debug.LogWarning("=====load data back========");
+        if (!WorkingTable) return;
+        change_panel_status(
+            WorkingTable.gameObject,
+            (int)CylinderPanels.WORKING_TABLE_PANEL);
 
-        //    if (!result.cancelled)
-        //    {
-        //        // We'll only allow one dataset at a time in the runtime GUI (for simplicity)
-        //        //DespawnAllDatasets();
+        UnityVolumeRendering.VolumeObjectFactory.OnWorkingTableChange(mIsPanelOn[(int)CylinderPanels.WORKING_TABLE_PANEL]);
+        
+        //////MENGHE: GIVE OPTIONS TO WORK ON OTHER STUFF
+        //if (mIsPanelOn[(int)CylinderPanels.WORKING_TABLE_PANEL])
+        //    //{
+        //    //    GameObject content_obj = new GameObject("Contents");
+        //    //    content_obj.transform.parent = WorkingTable;
+        //    SlicingPanel.GetComponent<SlicingEdit>().OnEnableWorkingTableTarget(WorkingTable.Find("Contents"));
+        ////}
+        //else
+        //    //{
+        //    //    GameObject.Destroy(WorkingTable.Find("Contents").gameObject);
+        //    SlicingPanel.GetComponent<SlicingEdit>().OnDisableWorkingTableTarget();
 
-        //        bool recursive = true;
-
-        //        // Read all files
-        //        IEnumerable<string> fileCandidates = Directory.EnumerateFiles(result.path, "*.*", recursive ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly)
-        //            .Where(p => p.EndsWith(".dcm", StringComparison.InvariantCultureIgnoreCase) || p.EndsWith(".dicom", StringComparison.InvariantCultureIgnoreCase) || p.EndsWith(".dicm", StringComparison.InvariantCultureIgnoreCase));
-
-        //        // Import the dataset
-        //        IImageSequenceImporter importer = ImporterFactory.CreateImageSequenceImporter(ImageSequenceFormat.DICOM);
-        //        IEnumerable<IImageSequenceSeries> seriesList = importer.LoadSeries(fileCandidates);
-        //        float numVolumesCreated = 0;
-        //        foreach (IImageSequenceSeries series in seriesList)
-        //        {
-        //            VolumeDataset dataset = importer.ImportSeries(series);
-        //            // Spawn the object
-        //            if (dataset != null)
-        //            {
-        //                VolumeRenderedObject obj = VolumeObjectFactory.CreateObject(dataset);
-        //                obj.transform.position = new Vector3(numVolumesCreated, 0, 0);
-        //                numVolumesCreated++;
-        //            }
-        //        }
-        //    }
+        ////}
     }
-    //private void DespawnAllDatasets()
-    //{
-    //    VolumeRenderedObject[] volobjs = FindObjectsOfType<VolumeRenderedObject>();
-    //    foreach (VolumeRenderedObject volobj in volobjs)
-    //    {
-    //        GameObject.Destroy(volobj.gameObject);
-    //    }
-    //}
-    //// Start is called before the first frame update
-    //void Start()
-    //{
-
-    //}
-
-    //// Update is called once per frame
-    //void Update()
-    //{
-
-    //}
 }

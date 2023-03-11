@@ -63,7 +63,6 @@ namespace UnityVolumeRendering
 
         private HelmVolumeParam helm_params = new HelmVolumeParam();
 
-        //TODO:
         public static readonly int MAX_CS_PLANE_NUM = 5;
         private Matrix4x4[] m_cs_plane_matrices = new Matrix4x4[MAX_CS_PLANE_NUM];
 
@@ -75,35 +74,32 @@ namespace UnityVolumeRendering
 
         public static bool isSnapAble = true;
 
-        public void CreateCrossSectionPlane()
+        public void onReset()
+        {
+            m_unified_scale = 1.0f;
+        }
+        public Transform CreateCrossSectionPlane()
         {
             Transform cross_plane;
             if (isSnapAble)
             {
                 cross_plane = GameObject.Instantiate((GameObject)Resources.Load("Prefabs/AAASnapCrossSectionPlane")).transform;
-
                 cross_plane.parent = transform;
                 cross_plane.localRotation = Quaternion.identity;
                 cross_plane.localPosition = Vector3.zero;
                 cross_plane.localScale = Vector3.one;
-
-                //cross_plane.rotation = transform.rotation;
-                //cross_plane.position = transform.position;
-                //cross_plane.localScale = transform.localScale;
-
-                Transform csplane_mesh = cross_plane.Find("CSPlaneObj").Find("CSPlaneMesh");
+                Transform csplane_mesh = cross_plane.Find("TargetObject").Find("Mesh");
                 csplane_mesh.localRotation = Quaternion.Euler(90.0f, 0.0f, 0.0f);
                 csplane_mesh.localPosition = Vector3.zero;
-                csplane_mesh.localScale = Vector3.one * 1.2f;
+                csplane_mesh.localScale = Vector3.one * 1.3f;
+
                 m_cs_planes.Add(csplane_mesh);
             }
             else
             {
                 cross_plane = GameObject.Instantiate((GameObject)Resources.Load("Prefabs/CrossSectionPlane")).transform;
                 cross_plane.parent = transform;
-
                 m_cs_planes.Add(cross_plane);
-
                 cross_plane.localRotation = Quaternion.Euler(90.0f, 0.0f, 0.0f);
                 cross_plane.localPosition = Vector3.zero;
                 cross_plane.localScale = Vector3.one * 1.2f;
@@ -111,6 +107,7 @@ namespace UnityVolumeRendering
             //GameObject quad = GameObject.Instantiate((GameObject)Resources.Load("Prefabs/CrossSectionPlane"));
             cross_plane.name = "CSPlane" + m_cs_planes.Count;
             meshRenderer.sharedMaterial.EnableKeyword("CUTOUT_PLANE");
+            return cross_plane;
         }
         public void DeleteCrossSectionPlaneAt(int TargetId)
         {
@@ -121,7 +118,6 @@ namespace UnityVolumeRendering
                 m_cs_planes.RemoveAt(TargetId);
             }
         }
-
         private void check_slicing_planes() {
             for (int i = SlicingPlaneList.Count - 1; i >= 0; i--)
             {
@@ -132,7 +128,7 @@ namespace UnityVolumeRendering
             //    DisplayRackFactory.DeAttachFromRack(DisplayRackFactory.DisplayRacks.ROOM_LEFT_BOARD);
 
         }
-        public void CreateSlicingPlane()
+        public Transform CreateSlicingPlane(bool AddToRack = false)
         {
             //check the list
             if(!isSnapAble)check_slicing_planes();
@@ -151,7 +147,7 @@ namespace UnityVolumeRendering
                 slicePlaneObj.localPosition = Vector3.zero;
                 slicePlaneObj.localScale = Vector3.one;
 
-                slicing_plane = slicePlaneObj.Find("SlicingPlaneObj").Find("SlicingPlaneMesh").gameObject.AddComponent<SlicingPlane>();
+                slicing_plane = slicePlaneObj.Find("TargetObject").Find("Mesh").gameObject.AddComponent<SlicingPlane>();
                 slicing_plane.mPlaneBoundaryRenderer = slicing_plane.transform.Find("CollidingBBox").GetComponent<MeshRenderer>();
             }
             else
@@ -168,9 +164,12 @@ namespace UnityVolumeRendering
                 transferFunction.GetTexture()
                 );
             SlicingPlaneList.Add(slicing_plane.transform);
+
+            if(AddToRack)
             DisplayRackFactory.AddFrame(DisplayRackFactory.DisplayRacks.ROOM_LEFT_BOARD, slicing_plane);
             ////MENGHE: add drawing plane at the right place
             ////slicePlane.AddAnnotationPlane(Resources.Load<RenderTexture>("RenderTextures/DrawRT"));
+            return slicePlaneObj;
         }
 
         public void DeleteSlicingPlaneAt(int TargetId)
@@ -255,7 +254,15 @@ namespace UnityVolumeRendering
         }
         public void SetOriginalScale(Vector3 scale) { 
             m_real_scale = scale;
-            transform.localScale = m_real_scale * m_unified_scale;
+            if (isSnapAble)
+            {
+                transform.localScale = m_real_scale;
+                transform.parent.localScale = Vector3.one * m_unified_scale;
+            }
+            else
+            {
+                transform.localScale = m_real_scale * m_unified_scale;
+            }
         }
         public void SetVolumeUnifiedScale(float new_scale)
         {
@@ -264,8 +271,16 @@ namespace UnityVolumeRendering
             if (new_scale != m_unified_scale)
             {
                 m_unified_scale = new_scale;
-                transform.localScale = m_real_scale * new_scale;
+                if (isSnapAble)
+                {
+                    transform.parent.localScale = Vector3.one * m_unified_scale;
+                }
+                else
+                {
+                    transform.localScale = m_real_scale * m_unified_scale;
+                }
             }
+            VolumeObjectFactory.gVolumeScaleDirty = true;
         }
 
         public float GetVolumeUnifiedScale()
@@ -459,7 +474,7 @@ namespace UnityVolumeRendering
                 int active_count = plane_count;
                 for (int i = 0; i < plane_count; i++)
                 {
-                    if (!m_cs_planes[i].gameObject.activeSelf){
+                    if (!m_cs_planes[i].gameObject.activeInHierarchy){
                         active_count--; continue; 
                     }
 

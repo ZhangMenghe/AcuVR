@@ -28,14 +28,22 @@ public class DisplayRackFactory//:MonoBehaviour
 
     private static readonly Vector3[] BOARD_INITIAL_POSITIONS = {
         new Vector3(2.5f, 2.0f, 1.3f),
-        new Vector3(-0.8f, 1.1f, 1.25f),
+        //new Vector3(-4.0f, 3.6f, -1.28f),
+        new Vector3(-2.2f, 1.1f, 1.7f),
         new Vector3(0.8f, 1.1f, -1.4f),
     };
     private static readonly Quaternion[] BOARD_INITIAL_ROTATIONS = {
         Quaternion.Euler(.0f, 60.0f, .0f),
-        Quaternion.Euler(.0f, -30.0f, .0f),
+        //Quaternion.Euler(.0f, -41.0f, .0f),
+
+        Quaternion.Euler(.0f, .0f, .0f),
         Quaternion.Euler(.0f, 150.0f, .0f)
     };
+
+    public static Transform GetFrameOnRack(DisplayRacks rackId, int frameId)
+    {
+        return frameList[(int)rackId][frameId];
+    }
     public static ref Transform GetDisplayRack(DisplayRacks rackId)
     {
         return ref DisplayRackObjs[(int)rackId];
@@ -59,20 +67,6 @@ public class DisplayRackFactory//:MonoBehaviour
         title.GetComponent<TMPro.TextMeshPro>().SetText(rack_name);
         return display_rack;
     }
-    //public static GameObject CreateMagnificationViewRack(string rack_name, float ratio)
-    //{
-    //    GameObject display_rack = CreateDisplayRack(rack_name);
-        
-    //    GameObject quad = GameObject.CreatePrimitive(PrimitiveType.Quad);
-        
-    //    quad.transform.parent = display_rack.transform;
-    //    quad.transform.localPosition = new Vector3(.0f, 0.15f, .0f);
-    //    quad.transform.localScale = new Vector3(ratio, 1.0f, 1.0f);
-    //    quad.transform.localRotation = Quaternion.identity;
-
-    //    quad.GetComponent<MeshRenderer>().sharedMaterial = Resources.Load<Material>("RenderTextures/AcuNeedleRT");
-    //    return display_rack;
-    //}
 
     public static bool AttachToRack(DisplayRacks rackId, string rack_name) {
         if (DisplayRackObjs[(int)rackId]) return false;
@@ -89,7 +83,8 @@ public class DisplayRackFactory//:MonoBehaviour
             }
             var title = DisplayRackObjs[(int)rackId].Find("Title");
             title.GetComponent<TMPro.TextMeshPro>().SetText(rack_name);
-        }else
+        }
+        else
         {
             DisplayRackObjs[(int)rackId] = CreateDisplayRack(StaticParent, rackId, rack_name);
         }
@@ -114,6 +109,7 @@ public class DisplayRackFactory//:MonoBehaviour
     public static void AddFrame(DisplayRacks rackId, in UnityVolumeRendering.SlicingPlane slicingPlane)
     {
         if (!isDisplayRackAttached[(int)rackId]) return;
+
         int curr_frame_num = visibilityLists[(int)rackId].Count;
         Transform frame = GameObject.Instantiate(Resources.Load<GameObject>("Prefabs/SingleCanvas")).transform;
         frame.name = "canvas" + curr_frame_num;
@@ -202,8 +198,8 @@ public class DisplayRackFactory//:MonoBehaviour
                 var canvasRenderer = currFrameList[fid].GetComponent<MeshRenderer>();
                 if (canvasRenderer != null)
                 {
-                    if(currVisibilities[fid]) currFrameMats[fid].DisableKeyword("INVISIBLE");
-                    else currFrameMats[fid].EnableKeyword("INVISIBLE");
+                    //if(currVisibilities[fid]) currFrameMats[fid].DisableKeyword("INVISIBLE");
+                    //else currFrameMats[fid].EnableKeyword("INVISIBLE");
 
                     currFrameMats[fid].DisableKeyword("OVERRIDE_MODEL_MAT");
                     currFrameMats[fid].SetMatrix("_parentInverseMat",
@@ -221,8 +217,11 @@ public class DisplayRackFactory//:MonoBehaviour
         }
 
     }
-    //private void Update()
+    //public static void OnAttachWorkingTable(in Transform table)
     //{
-    //    RenderFrames();
+
+    //}
+    //public static void OnDeAttachWorkingTableTarget()
+    //{
     //}
 }

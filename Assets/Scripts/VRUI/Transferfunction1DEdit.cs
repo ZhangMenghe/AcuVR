@@ -10,9 +10,10 @@ public class Transferfunction1DEdit : MonoBehaviour
     //public Transform MeshTransform;
     public Image tfGUIImage;
     public Image PaletteImage;
-    public RayInteractableHandler PalettePanel;
+    public PaletteHandler PalettePanel;
+    public HistHandler HistPanel;
 
-    public CylinderUI RootUIManager;
+    public VolumeDataEdit VolumeManager;
 
     private Material tfGUIMat = null;
     private Material tfPaletteGUIMat = null;
@@ -28,7 +29,7 @@ public class Transferfunction1DEdit : MonoBehaviour
     }
     void Update()
     {
-        if (!RootUIManager.mTargetVolume) return;
+        if (!VolumeObjectFactory.gTargetVolume) return;
 
         //menghe:REMOVE
         if (!tfGUIMat)
@@ -44,12 +45,12 @@ public class Transferfunction1DEdit : MonoBehaviour
         if (!histTex)
         {
             if (SystemInfo.supportsComputeShaders)
-                histTex = HistogramTextureGenerator.GenerateHistogramTextureOnGPU(RootUIManager.mTargetVolume.dataset);
+                histTex = HistogramTextureGenerator.GenerateHistogramTextureOnGPU(VolumeObjectFactory.gTargetVolume.dataset);
             else
-                histTex = HistogramTextureGenerator.GenerateHistogramTexture(RootUIManager.mTargetVolume.dataset);
+                histTex = HistogramTextureGenerator.GenerateHistogramTexture(VolumeObjectFactory.gTargetVolume.dataset);
         }
 
-        TransferFunction tf = RootUIManager.mTargetVolume.transferFunction;
+        TransferFunction tf = VolumeObjectFactory.gTargetVolume.transferFunction;
         tfGUIMat.SetTexture("_TFTex", tf.GetTexture());
         tfGUIMat.SetTexture("_HistTex", histTex);
 
@@ -73,15 +74,16 @@ public class Transferfunction1DEdit : MonoBehaviour
         tf.alphaControlPoints.Add(new TFAlphaControlPoint(0.8f, 1.0f));
         tf.colourControlPoints.Add(new TFColourControlPoint(0.5f, new Color(0.469f, 0.354f, 0.223f, 1.0f)));
         
-        if (RootUIManager.mTargetVolume)
-            RootUIManager.mTargetVolume.SetTransferFunction(tf);
+        if (VolumeObjectFactory.gTargetVolume)
+            VolumeObjectFactory.gTargetVolume.SetTransferFunction(tf);
         
         PalettePanel.OnReset();
+        HistPanel.OnReset();
     }
 
     public void OnColorSchemeChanged(int value) {
-        if (RootUIManager.mTargetVolume)
-            RootUIManager.mTargetVolume.SetColorScheme((UnityVolumeRendering.ColorTransferScheme)value);
+        if (VolumeObjectFactory.gTargetVolume)
+            VolumeObjectFactory.gTargetVolume.SetColorScheme((UnityVolumeRendering.ColorTransferScheme)value);
     }
     public void OnPaletteCanvasClicked()
     {

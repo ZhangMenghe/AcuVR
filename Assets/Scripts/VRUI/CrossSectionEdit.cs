@@ -1,135 +1,91 @@
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-
-public class CrossSectionEdit : MonoBehaviour
+using UnityVolumeRendering;
+public class CrossSectionEdit : BasicMutipleTargetUI
 {
-    public CylinderUI RootUIManager;
-    public Transform TargetDropDownObj;
-    public Button VisibilityBtn;
-
-    protected int mTargetId = -1;
-
-    protected List<bool> mSectionVisibilities = new List<bool>();
-    protected TMPro.TMP_Dropdown TargetDropDown;
-
-    protected Sprite InvisibleSprite;
-    protected Sprite VisibleSprite;
-    protected Texture2D TargetTex;
-    protected Texture2D unTargetTex;
-
-    protected void Initialize()
+    //public VolumeDataEdit VolumeManager;
+    //public Button ManipulationBtn;
+    //public Transform ControllerCursor;
+    private void Awake()
     {
-        VisibleSprite = Resources.Load<Sprite>("icons/see");
-        InvisibleSprite = Resources.Load<Sprite>("icons/unsee");
-
-        mTargetId = -1;
-        TargetDropDown = TargetDropDownObj.GetComponent<TMPro.TMP_Dropdown>();
-        TargetDropDown.onValueChanged.AddListener(delegate {
-            DropdownValueChanged(TargetDropDown.value);
-        });
-
-        VisibilityBtn.onClick.AddListener(delegate {
-            OnChangeVisibilityStatus();
-        });
+        mPlaneColor = new Color(1.0f, 0.6f, .0f);
+        mPlaneColorInactive = new Color(0.7f, 0.4f, 0.15f);
     }
-    protected void AddOptionToTargetDropDown(string entry)
+    private void Start()
     {
-        TMPro.TMP_Dropdown.OptionData newOption = new TMPro.TMP_Dropdown.OptionData();
-        newOption.text = entry;
-        TargetDropDown.options.Add(newOption);
-
-        TargetDropDown.RefreshShownValue();
-        TargetDropDown.Show();
+        //ManipulationBtn.onClick.AddListener(delegate {
+        //    OnChangeTransformManipulator();
+        //    ManipulationBtn.image.sprite = mManipulateMode ? ManulSprite : ManipulateSprite;
+        //});
+        Initialize();
+        //InitializeManipulator();
     }
-    protected void RemoveTargetOptionFromDropDown()
+    /*
+    protected override void ResetManipulator()
     {
-        mSectionVisibilities.RemoveAt(mTargetId);
-        TargetDropDown.options.RemoveAt(mTargetId + 1);
-        mTargetId = -1;
-        TargetDropDown.SetValueWithoutNotify(0);
-        UpdateSprite(true);
-
-    }
-    protected void UpdateSprite(bool isChecked)
-    {
-        SpriteState spriteState = VisibilityBtn.spriteState;
-
-        // Toggle between the ON and OFF sprites
-        if (isChecked)
+        if (mTargetId < 0)
         {
-            VisibilityBtn.image.sprite = VisibleSprite;
-            //spriteState.highlightedSprite = VisibleSprite;
+            if (mManipulateMode) HideManipulator();
+            return;
+        }
+
+        if (mManipulateMode)
+        {
+            mHandGrabInteractableObjs[mTargetId].SetActive(false);
+            mHandGrabInteractableObjs[mTargetId].transform.parent.Find("TargetObject").GetComponent<Oculus.Interaction.RayInteractable>().enabled = false;
+
+            var targetTransform = mHandGrabInteractableObjs[mTargetId].transform.parent.Find("TargetObject");
+            var targetLossyScaleSize = targetTransform.lossyScale;
+            mManipulator.transform.localScale = Vector3.one * Mathf.Max(targetLossyScaleSize.x, targetLossyScaleSize.y, targetLossyScaleSize.z) * 1.5f;
+            
+            mManipulator.transform.parent = mHandGrabInteractableObjs[mTargetId].transform.parent;
+            mManipulator.SetActive(true);
+            mManipulator.GetComponent<RotationManipulation>().ControllerCursor = ControllerCursor;
+            mManipulator.GetComponent<RotationManipulation>().Initialize();
         }
         else
         {
-            VisibilityBtn.image.sprite = InvisibleSprite;
-            //spriteState.highlightedSprite = InvisibleSprite;
+            HideManipulator();
+
+            mHandGrabInteractableObjs[mTargetId].SetActive(true);
+            mHandGrabInteractableObjs[mTargetId].transform.parent.Find("TargetObject").GetComponent<Oculus.Interaction.RayInteractable>().enabled = true;
+
+            //GameObject.Destroy(mHandGrabInteractableObjs[mTargetId].transform.parent.Find("RotationManipulator").gameObject);
         }
-
-        VisibilityBtn.spriteState = spriteState;
     }
-
-    private void Start()
-    {
-        TargetTex = Resources.Load<Texture2D>("Textures/CrossSectionPlaneTexture");
-        unTargetTex = Resources.Load<Texture2D>("Textures/CrossSectionPlaneTextureDim");
-        Initialize();
-    }
-
+    */
     public void OnAddCrossSectionPlane()
     {
-        //MENGHE: ADD A NOTIFICATION OR STH
-        if (!RootUIManager.mTargetVolume || mSectionVisibilities.Count > UnityVolumeRendering.VolumeRenderedObject.MAX_CS_PLANE_NUM) return;
+        if (!VolumeObjectFactory.gTargetVolume || mIsVisibles.Count > VolumeRenderedObject.MAX_CS_PLANE_NUM) return;
 
-        RootUIManager.mTargetVolume.CreateCrossSectionPlane();
-        mSectionVisibilities.Add(true);
-        AddOptionToTargetDropDown("CSPlane " + mSectionVisibilities.Count.ToString());
+        Transform planeRoot = VolumeObjectFactory.gTargetVolume.CreateCrossSectionPlane();
+        var box_renderer = VolumeObjectFactory.gTargetVolume.m_cs_planes[mIsVisibles.Count].GetComponent<MeshRenderer>();
+        box_renderer.material.SetColor("_Color", mPlaneColor);
+        mBBoxRenderer.Add(box_renderer);
+
+        mTargetObjs.Add(planeRoot);
+        mHandGrabInteractableObjs.Add(planeRoot.Find("HandGrabInteractable").gameObject);
+        mIsVisibles.Add(true);
+
+        AddOptionToTargetDropDown("CSPlane " + (++mTotalId));
+
+        DropdownValueChanged(mIsVisibles.Count);
+
+        //if (mManipulateMode) ResetManipulator();
     }
     public void OnRemoveCrossSectionPlane()
     {
-        if (RootUIManager.mTargetVolume && mTargetId >= 0)
-        {
-            RootUIManager.mTargetVolume.DeleteCrossSectionPlaneAt(mTargetId);
-            RemoveTargetOptionFromDropDown();
-        }
+        if (!VolumeObjectFactory.gTargetVolume || mTargetId < 0) return;
+        VolumeObjectFactory.gTargetVolume.DeleteCrossSectionPlaneAt(mTargetId);
+        OnRemoveTarget();
     }
 
-    protected virtual void OnChangeVisibilityStatus()
+    private void Update()
     {
-        if (mTargetId < 0) return;
+        //DO NOT TOUCH!
+        if (mTargetId < 0 || !VolumeObjectFactory.gHandGrabbleDirty) return;
 
-        mSectionVisibilities[mTargetId] = !mSectionVisibilities[mTargetId];
-        RootUIManager.mTargetVolume.m_cs_planes[mTargetId].parent.parent.gameObject.SetActive(mSectionVisibilities[mTargetId]);
-        RootUIManager.mTargetVolume.m_cs_planes[mTargetId].gameObject.SetActive(mSectionVisibilities[mTargetId]);
-        UpdateSprite(mSectionVisibilities[mTargetId]);
-    }
-
-    protected virtual void UpdateSnapableObjectStatus(int value)
-    {
-        //disable current one
-        if (mTargetId >= 0)
-        {
-            RootUIManager.mTargetVolume.m_cs_planes[mTargetId].GetComponent<MeshRenderer>().material.SetTexture("_MainTex", unTargetTex);
-            RootUIManager.mTargetVolume.m_cs_planes[mTargetId].parent.parent.Find("HandGrabInteractable").gameObject.SetActive(false);
-        }
-        //enable the new one
-        if (value >= 0)
-        {
-            RootUIManager.mTargetVolume.m_cs_planes[value].GetComponent<MeshRenderer>().material.SetTexture("_MainTex", TargetTex);
-            RootUIManager.mTargetVolume.m_cs_planes[value].parent.parent.Find("HandGrabInteractable").gameObject.SetActive(true);
-        }
-    }
-
-    protected void DropdownValueChanged(int value)
-    {
-        if ((value-1) == mTargetId) return;
-        //update the interactable status
-        UpdateSnapableObjectStatus(value - 1);
-
-        //Update visibility status of the current plane
-        UpdateSprite(value < 1 ? true : mSectionVisibilities[value-1]);
-
-        mTargetId = value - 1;
+        mHandGrabInteractableObjs[mTargetId].SetActive(false);
+        mHandGrabInteractableObjs[mTargetId].SetActive(true);
     }
 }

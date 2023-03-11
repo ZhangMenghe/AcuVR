@@ -1,15 +1,13 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
-using UnityVolumeRendering;
 using System;
+using UnityVolumeRendering;
 
 public class VolumePropoertiesEdit : MonoBehaviour
 {
 
-    public CylinderUI RootUIManager;
+    public VolumeDataEdit VolumeManager;
     public Transform ScaleSliderGroup;
     public Transform ContrastMinSliderGroup;
     public Transform ContrastMaxSliderGroup;
@@ -68,28 +66,28 @@ public class VolumePropoertiesEdit : MonoBehaviour
 
         if (ScaleText && ScaleSlider)
             ScaleText.SetText(ScaleSlider.value.ToString("0.00"));
-        //RootUIManager.mTargetVolume.GetComponent<VolumeRenderedObject>().SetVolumeUnifiedScale(ScaleSlider.value);
-        //ref VolumeRenderedObject target = ref RootUIManager.getTargetVolume();
-        if (RootUIManager.mTargetVolume)
-            RootUIManager.mTargetVolume.SetVolumeUnifiedScale(ScaleSlider.value);
+        //VolumeObjectFactory.gTargetVolume.GetComponent<VolumeRenderedObject>().SetVolumeUnifiedScale(ScaleSlider.value);
+        //ref VolumeRenderedObject target = ref VolumeManager.getTargetVolume();
+        if (VolumeObjectFactory.gTargetVolume)
+            VolumeObjectFactory.gTargetVolume.SetVolumeUnifiedScale(ScaleSlider.value);
     }
 
     public void OnVolumeRenderingMethodChange(int change)
     {
-        if (RootUIManager.mTargetVolume)
-            RootUIManager.mTargetVolume.SetRenderMode((UnityVolumeRendering.RenderMode)change);
+        if (VolumeObjectFactory.gTargetVolume)
+            VolumeObjectFactory.gTargetVolume.SetRenderMode((UnityVolumeRendering.RenderMode)change);
     }
     public void OnVolumeCutOffChange()
     {
-        if (!RootUIManager.mTargetVolume) return;
+        if (!VolumeObjectFactory.gTargetVolume) return;
 
-        bool new_status = !RootUIManager.mTargetVolume.GetContrastCutoffEnabled();
+        bool new_status = !VolumeObjectFactory.gTargetVolume.GetContrastCutoffEnabled();
         
         UpdateSprite(CutOffBtn, new_status);
         
-        RootUIManager.mTargetVolume.SetContrastCutoffEnabled(new_status);
+        VolumeObjectFactory.gTargetVolume.SetContrastCutoffEnabled(new_status);
         
-        Vector3 contrast = RootUIManager.mTargetVolume.GetVisibilityWindow();
+        Vector3 contrast = VolumeObjectFactory.gTargetVolume.GetVisibilityWindow();
         ContrastMinSlider.value = Math.Max(contrast.x, .0f);
         ContrastMaxSlider.value = Math.Min(contrast.y, 1.0f);
 
@@ -99,31 +97,31 @@ public class VolumePropoertiesEdit : MonoBehaviour
 
     public void OnVolumeContrastMinChange()
     {
-        if (!RootUIManager.mTargetVolume) return;
+        if (!VolumeObjectFactory.gTargetVolume) return;
 
-        Vector3 contrast = RootUIManager.mTargetVolume.GetVisibilityWindow();
+        Vector3 contrast = VolumeObjectFactory.gTargetVolume.GetVisibilityWindow();
         contrast.x = ContrastMinSlider.value;
-        RootUIManager.mTargetVolume.SetVisibilityWindow(contrast);
+        VolumeObjectFactory.gTargetVolume.SetVisibilityWindow(contrast);
         CMinText.SetText(contrast.x.ToString("0.00"));
     }
 
     public void OnVolumeContrastMaxChange()
     {
-        if (!RootUIManager.mTargetVolume) return;
+        if (!VolumeObjectFactory.gTargetVolume) return;
 
-        Vector3 contrast = RootUIManager.mTargetVolume.GetVisibilityWindow();
+        Vector3 contrast = VolumeObjectFactory.gTargetVolume.GetVisibilityWindow();
         contrast.y = ContrastMaxSlider.value;
-        RootUIManager.mTargetVolume.SetVisibilityWindow(contrast);
+        VolumeObjectFactory.gTargetVolume.SetVisibilityWindow(contrast);
         CMaxText.SetText(contrast.y.ToString("0.00"));
     }
 
     public void OnBrightnessChange()
     {
-        if (!RootUIManager.mTargetVolume) return;
+        if (!VolumeObjectFactory.gTargetVolume) return;
         
-        Vector3 contrast = RootUIManager.mTargetVolume.GetVisibilityWindow();
+        Vector3 contrast = VolumeObjectFactory.gTargetVolume.GetVisibilityWindow();
         contrast.z = BrightnessSlider.value;
-        RootUIManager.mTargetVolume.SetVisibilityWindow(contrast);
+        VolumeObjectFactory.gTargetVolume.SetVisibilityWindow(contrast);
         BrightText.SetText(contrast.z.ToString("0.00"));
     }
     private void UpdateSprite(Button btn, bool isChecked)

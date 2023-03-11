@@ -33,24 +33,24 @@ namespace UnityVolumeRendering
             //sliceMeshRend.material = new Material(sliceMeshRend.sharedMaterial);
 
             //Material sliceMat = transform.GetComponent<MeshRenderer>().sharedMaterial;
-            meshRenderer.sharedMaterial.SetTexture("_DataTex", data_tex);
-            meshRenderer.sharedMaterial.SetTexture("_TFTex", tf_tex);
+            meshRenderer.material.SetTexture("_DataTex", data_tex);
+            meshRenderer.material.SetTexture("_TFTex", tf_tex);
 
             meshRenderer = GetComponent<MeshRenderer>();
         }
 
         private void Update()
         {
-            meshRenderer.sharedMaterial.SetMatrix("_parentInverseMat",
+            meshRenderer.material.SetMatrix("_parentInverseMat",
                 mParentTransform ? mParentTransform.worldToLocalMatrix : transform.worldToLocalMatrix);
 
             Matrix4x4 plane_mat = Matrix4x4.TRS(
                 transform.position,
                 transform.rotation,
                 mParentTransform ? mParentTransform.lossyScale : transform.lossyScale);
-            meshRenderer.sharedMaterial.EnableKeyword("OVERRIDE_MODEL_MAT");
-            meshRenderer.sharedMaterial.SetMatrix("_planeMat", plane_mat);
-            meshRenderer.sharedMaterial.SetMatrix("_planeModelMat", plane_mat*Matrix4x4.Scale(transform.localScale));
+            meshRenderer.material.EnableKeyword("OVERRIDE_MODEL_MAT");
+            meshRenderer.material.SetMatrix("_planeMat", plane_mat);
+            meshRenderer.material.SetMatrix("_planeModelMat", plane_mat*Matrix4x4.Scale(transform.localScale));
         }
     }
 }
