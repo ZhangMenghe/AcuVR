@@ -1,0 +1,232 @@
+# Blender 3.4.1 MTL File: 'room.blend'
+# www.blender.org
+
+newmtl Beam
+Ka 1.000000 1.000000 1.000000
+Ks 0.333333 0.333333 0.333333
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Kd C:/Users/zzmmh/Documents/New folder/Wood02_col.png
+map_Ns C:/Users/zzmmh/Documents/New folder/textures/Wood02_rgh.png
+map_Bump C:/Users/zzmmh/Documents/New folder/Wood02_nrm.png
+
+newmtl Carpet
+Ns 224.999985
+Ka 1.000000 1.000000 1.000000
+Ks 0.466667 0.466667 0.466667
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Kd C:/Users/zzmmh/Documents/New folder/2K-fabric_17-diffuse.jpg
+map_Bump C:/Users/zzmmh/Documents/New folder/2K-fabric_17-normal.jpg
+
+newmtl Ceiling
+Ns 224.999985
+Ka 1.000000 1.000000 1.000000
+Ks 0.333333 0.333333 0.333333
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Kd C:/Users/zzmmh/Documents/New folder/woodplank_albedo.png
+map_Bump C:/Users/zzmmh/Documents/New folder/woodplank_normal.png
+
+newmtl Chair
+Ns 81.000023
+Ka 1.000000 1.000000 1.000000
+Ks 0.400000 0.400000 0.400000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Kd C:/Users/zzmmh/Documents/New folder/RFAIPP_Chair_6_albedo.png
+map_Bump C:/Users/zzmmh/Documents/New folder/RFAIPP_Chair_6_nm.png
+
+newmtl Coffee
+Ns 103.333092
+Ka 1.000000 1.000000 1.000000
+Kd 0.138608 0.085703 0.061770
+Ks 0.373226 0.373226 0.373226
+Ke 0.000000 0.000000 0.000000
+Ni 1.333300
+d 1.000000
+illum 2
+
+newmtl Curtain
+Ns 0.000000
+Ka 1.000000 1.000000 1.000000
+Kd 0.010023 0.010023 0.010023
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+
+newmtl Fabric
+Ns 224.999985
+Ka 1.000000 1.000000 1.000000
+Ks 0.433333 0.433333 0.433333
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Kd C:/Users/zzmmh/Documents/New folder/Fabric01_col.png.002.png
+map_Bump C:/Users/zzmmh/Documents/New folder/Fabric01_nrm.png
+
+newmtl Fabric.002
+Ns 224.999985
+Ka 1.000000 1.000000 1.000000
+Ks 0.433333 0.433333 0.433333
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Kd C:/Users/zzmmh/Documents/New folder/Fabric01_col.png.002.png
+map_Bump C:/Users/zzmmh/Documents/New folder/Fabric01_nrm.png
+
+newmtl FinishedPlastic
+Ns 72.249992
+Ka 1.000000 1.000000 1.000000
+Kd 0.800000 0.800000 0.800000
+Ks 0.405667 0.405667 0.405667
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+
+newmtl Floor
+Ns 324.000031
+Ka 1.000000 1.000000 1.000000
+Ks 0.233333 0.233333 0.233333
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Kd C:/Users/zzmmh/Documents/New folder/POLAR WHITE - POLISHED - MARBLE-diffuse.jpg
+map_Bump C:/Users/zzmmh/Documents/New folder/POLAR WHITE - POLISHED - MARBLE-normal.jpg
+
+newmtl Glass
+Ns 807.756287
+Ka 1.000000 1.000000 1.000000
+Kd 0.800000 0.800000 0.800000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+
+newmtl Light
+Ns 324.000031
+Ka 1.000000 1.000000 1.000000
+Kd 0.800000 0.800000 0.800000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 2
+
+newmtl Logo.001
+Ns 324.000031
+Ka 1.000000 1.000000 1.000000
+Ks 0.333333 0.333333 0.333333
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd textures/logo.z.j.jpeg
+
+newmtl Magazine
+Ns 0.000000
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Kd C:/Users/zzmmh/Documents/New folder/JohnsHopkins_US_WI14.jpg
+
+newmtl Magazine2
+Ns 0.000000
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Kd C:/Users/zzmmh/Documents/New folder/cover.jpg
+
+newmtl Metal
+Ns 351.562500
+Ka 1.000000 1.000000 1.000000
+Kd 0.384375 0.384375 0.384375
+Ks 0.625000 0.625000 0.625000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 3
+
+newmtl Rug
+Ns 0.000000
+Ka 1.000000 1.000000 1.000000
+Kd 0.590040 0.563073 0.453897
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+
+newmtl Wall
+Ns 24.999985
+Ka 1.000000 1.000000 1.000000
+Ks 0.444333 0.444333 0.444333
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Kd C:/Users/zzmmh/Documents/New folder/4K-Classic Parquet_1_baseColor.jpg
+map_Bump C:/Users/zzmmh/Documents/New folder/4K-Classic Parquet_1_normal.jpg
+
+newmtl WindowTrim
+Ns 512.404907
+Ka 1.000000 1.000000 1.000000
+Kd 0.800000 0.800000 0.800000
+Ks 0.248333 0.248333 0.248333
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+
+newmtl Wood
+Ns 224.999985
+Ka 1.000000 1.000000 1.000000
+Ks 0.300000 0.300000 0.300000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Kd C:/Users/zzmmh/Documents/New folder/Wood_07_2K_Base_Color.png
+map_Bump C:/Users/zzmmh/Documents/New folder/Wood_07_2K_Normal.png
+
+newmtl Wood.001
+Ns 224.999985
+Ka 1.000000 1.000000 1.000000
+Ks 0.300000 0.300000 0.300000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Kd C:/Users/zzmmh/Documents/New folder/Wood_10_4K_Base_Color.png
+map_Bump C:/Users/zzmmh/Documents/New folder/Wood_10_4K_Normal.png
+
+newmtl lightBoi
+Ns 324.000031
+Ka 1.000000 1.000000 1.000000
+Kd 0.800000 0.800000 0.800000
+Ks 0.427667 0.427667 0.427667
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 2
