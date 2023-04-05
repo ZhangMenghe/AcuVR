@@ -2,12 +2,11 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using System;
-using UnityVolumeRendering;
 
 public class VolumePropoertiesEdit : MonoBehaviour
 {
 
-    public VolumeDataEdit VolumeManager;
+    //public VolumeDataEdit VolumeManager;
     public Transform ScaleSliderGroup;
     public Transform ContrastMinSliderGroup;
     public Transform ContrastMaxSliderGroup;
@@ -141,5 +140,13 @@ public class VolumePropoertiesEdit : MonoBehaviour
         }
 
         btn.spriteState = spriteState;
+    }
+    private void Update()
+    {
+        if (VolumeObjectFactory.gVolumeScaleDirty)
+        {
+            ScaleSlider.value = VolumeObjectFactory.gTargetVolume.GetVolumeUnifiedScale();
+            ScaleText.SetText(ScaleSlider.value.ToString("0.00"));
+        }
     }
 }

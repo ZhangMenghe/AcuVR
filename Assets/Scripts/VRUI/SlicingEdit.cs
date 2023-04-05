@@ -4,11 +4,25 @@ using UnityEngine.UI;
 using UnityVolumeRendering;
 public class SlicingEdit : BasicMutipleTargetUI
 {
+    private enum ScrollStatus
+    {
+        NONE,
+        SCROLL_VIEW_ADD,
+        SCROLL_VIEW_REMOVE,
+        SCROLL_VIEW_CHANGE
+    }
     public Transform PreviewContentParent;
     private List<SlicingPlane> mSlicingPlanes = new List<SlicingPlane>();
-    private List<Transform> mPreviewSlices = new List<Transform>();
+    private List<RectTransform> mPreviewSlices = new List<RectTransform>();
     private List<Material> mPreviewSliceMat = new List<Material>();
+    private List<bool> mSliceVisibilities = new List<bool>();
 
+    private RectTransform mScrollContentRect;
+    private float mScrollWidth;
+    private float mContentWidth;
+    private float mSpacing = 2.0f;
+    private float mLastScrollPosition = -10.0f;
+    private bool mScrollConsumed = true;
     //private Transform mWorkingTable;
     //private string mLastWorkingTableTarget = "";
     //private bool mWorkingTableDirty;
@@ -16,10 +30,59 @@ public class SlicingEdit : BasicMutipleTargetUI
     {
         mPlaneColor = new Color(.15f, 0.5f, .25f);
         mPlaneColorInactive = new Color(.25f, 0.35f, .3f);
+
     }
     private void Start()
     {
         Initialize();
+        var scroll_rect = transform.GetComponentInChildren<ScrollRect>();
+        mScrollWidth = scroll_rect.GetComponent<RectTransform>().sizeDelta.x;
+        mScrollContentRect = scroll_rect.content.GetComponent<RectTransform>();
+    }
+
+    public void OnScrollValueChange(Vector2 scrollPosition)
+    {
+        if (!mScrollConsumed) return;
+        bool scroll_left = mLastScrollPosition < scrollPosition.x;
+        int frontId, backId;
+        for (frontId = 0; frontId < mSliceVisibilities.Count && !mSliceVisibilities[frontId]; frontId++) ;
+        if(!scroll_left) frontId -= 1;
+
+        if (frontId >= 0)
+            mSliceVisibilities[frontId] = mPreviewSlices[frontId].anchoredPosition.x + mScrollContentRect.anchoredPosition.x > 0;
+
+        for (backId = mSliceVisibilities.Count - 1; backId > frontId && !mSliceVisibilities[backId]; backId--);
+        if (scroll_left) backId += 1;
+
+        ////scroll left
+        //if (mLastScrollPosition < scrollPosition.x)
+        //{
+        //    for (frontId = 0; frontId < mSliceVisibilities.Count && !mSliceVisibilities[frontId]; frontId++);
+        //    //mSliceVisibilities[frontId] = mPreviewSlices[frontId].anchoredPosition.x + mScrollContentRect.anchoredPosition.x > 0;
+
+        //    for (backId = mSliceVisibilities.Count - 1; backId > frontId && !mSliceVisibilities[backId]; backId--);
+        //    backId += 1;
+
+        //    //if (backId > frontId && backId < mSliceVisibilities.Count)
+        //    //{
+        //    //    mSliceVisibilities[backId] = mPreviewSlices[backId].anchoredPosition.x + mScrollContentRect.anchoredPosition.x < mScrollWidth - mContentWidth;
+        //    //}
+        //}
+        //else
+        //{
+        //    for (frontId = 0; frontId < mSliceVisibilities.Count && !mSliceVisibilities[frontId]; frontId++) ;
+        //    frontId -= 1;
+
+        //    for (backId = mSliceVisibilities.Count - 1; backId > frontId && !mSliceVisibilities[backId]; backId--);
+        //}
+        
+        if (backId > frontId && backId < mSliceVisibilities.Count)
+        {
+            mSliceVisibilities[backId] = mPreviewSlices[backId].anchoredPosition.x + mScrollContentRect.anchoredPosition.x < mScrollWidth - mContentWidth;
+        }
+
+        mLastScrollPosition = scrollPosition.x;
+        mScrollConsumed = false;
     }
 
     public void OnAddSlicingPlane()
@@ -45,6 +108,8 @@ public class SlicingEdit : BasicMutipleTargetUI
         preview_plane.localScale = Vector3.one;
         preview_plane.localPosition = Vector3.zero;
 
+        mContentWidth = preview_plane.sizeDelta.x;
+
         var slicingPlaneData = slicePlane.GetComponent<SlicingPlane>();
         mSlicingPlanes.Add(slicingPlaneData);
         var frame_material = new Material(preview_plane.GetComponentInChildren<Image>().material);
@@ -55,6 +120,12 @@ public class SlicingEdit : BasicMutipleTargetUI
 
         preview_plane.Find("Title").GetComponent<TMPro.TMP_Text>().SetText("Slice " + mTotalId);
         mPreviewSlices.Add(preview_plane);
+
+        var scount = mPreviewSlices.Count;
+        if (scount > 1)
+            mSliceVisibilities.Add(mPreviewSlices[scount - 2].anchoredPosition.x + mScrollContentRect.anchoredPosition.x < mScrollWidth - mContentWidth * 2 - mSpacing);
+        else
+            mSliceVisibilities.Add(mScrollContentRect.anchoredPosition.x>(-mContentWidth));
     }
     public void OnRemoveSlicingPlane()
     {
@@ -62,8 +133,16 @@ public class SlicingEdit : BasicMutipleTargetUI
         VolumeObjectFactory.gTargetVolume.DeleteSlicingPlaneAt(mTargetId);
         GameObject.Destroy(mPreviewSlices[mTargetId].gameObject);
         mPreviewSlices.RemoveAt(mTargetId);
+        mSliceVisibilities.RemoveAt(mTargetId);
         mPreviewSliceMat.RemoveAt(mTargetId);
         mSlicingPlanes.RemoveAt(mTargetId);
+        //adjust scroll view
+        for(int i=mTargetId; i<mPreviewSlices.Count; i++)
+        {
+            var anx = mPreviewSlices[i].anchoredPosition.x + mScrollContentRect.anchoredPosition.x - mContentWidth - mSpacing;
+            mSliceVisibilities[i] = (anx > 0) && (anx < mScrollWidth - mContentWidth);
+            //mPreviewSlices[i].gameObject.SetActive(mSliceVisibilities[i]);
+        }
         OnRemoveTarget();
     }
     //private void UpdateWorkingTableCanvas()
@@ -97,6 +176,43 @@ public class SlicingEdit : BasicMutipleTargetUI
     //{
     //DisplayRackFactory.DeAttachFromRack(DisplayRackFactory.DisplayRacks.ROOM_LEFT_BOARD);
     //}
+    private void UpdateScrollViewVisibility()
+    {
+        int scount = mPreviewSlices.Count;
+        //if(mScrollStatus == ScrollStatus.SCROLL_VIEW_ADD)
+        //{
+        //    //check the last one
+        //    mSliceVisibilities[scount - 1] = mPreviewSlices[scount - 1].anchoredPosition.x + mScrollContentRect.rect.x < mScrollContentRect.sizeDelta.x - mContentWidth;
+        //}
+        //else if(mScrollStatus == ScrollStatus.SCROLL_VIEW_REMOVE)
+        //{
+        //    //Check all items following
+        //    for(int i=mRemoveTarget; i<scount-1; i++)
+        //    {
+        //        var anchor_x = mPreviewSlices[i].GetComponent<RectTransform>().anchoredPosition.x;
+
+        //        mSliceVisibilities[i] = anchor_x
+        //    }
+        //}
+        //transform.GetComponentInChildren<ScrollRect>().content.GetComponent<RectTransform>()
+
+        //if (front)
+        //{
+        //    for (int i = 0; i<mSliceVisibilities.Count; i++)
+        //    {
+        //        if (mPreviewSlices[i].GetComponent<RectTransform>().anchoredPosition.x < .0f) mSliceVisibilities[i] = false;
+        //        else
+        //            break;
+        //    }
+        //}
+        //if (back)
+        //{
+        //    for (int i = mSliceVisibilities.Count - 1; i >= 0 && !mSliceVisibilities[i]; i--)
+        //    {
+        //        if (mPreviewSlices[i].GetComponent<RectTransform>().anchoredPosition.x < mScrollContentRect.sizeDelta.x - mContentWidth) mSliceVisibilities[i] = true;
+        //    }
+        //}
+    }
     protected override void OnChangeVisibilityStatus()
     {
         if (mTargetId < 0) return;
@@ -106,23 +222,34 @@ public class SlicingEdit : BasicMutipleTargetUI
 
     private void Update()
     {
+        //if (mScrollStatus!=ScrollStatus.NONE)
+        //{
+        //    UpdateScrollViewVisibility();
+        //    mScrollStatus = ScrollStatus.NONE;
+        //}
         //Render Previews
         for (int fid = 0; fid < mPreviewSlices.Count; fid++)
         {
-            if (!mIsVisibles[fid]) continue;
-            
-            mPreviewSliceMat[fid].DisableKeyword("OVERRIDE_MODEL_MAT");
-            mPreviewSliceMat[fid].SetMatrix("_parentInverseMat",
-                                            mSlicingPlanes[fid].mParentTransform ?
-                                            mSlicingPlanes[fid].mParentTransform.worldToLocalMatrix : mSlicingPlanes[fid].transform.worldToLocalMatrix);
+            if (!mIsVisibles[fid] || !mSliceVisibilities[fid])
+                mPreviewSliceMat[fid].EnableKeyword("DISCARD_ALL");
+            else
+            {
+                mPreviewSliceMat[fid].DisableKeyword("DISCARD_ALL");
+                mPreviewSliceMat[fid].DisableKeyword("OVERRIDE_MODEL_MAT");
+                mPreviewSliceMat[fid].SetMatrix("_parentInverseMat",
+                                                mSlicingPlanes[fid].mParentTransform ?
+                                                mSlicingPlanes[fid].mParentTransform.worldToLocalMatrix : mSlicingPlanes[fid].transform.worldToLocalMatrix);
 
-            mPreviewSliceMat[fid].SetMatrix("_planeMat", Matrix4x4.TRS(
-                mSlicingPlanes[fid].transform.position,
-                mSlicingPlanes[fid].transform.rotation,
-                mSlicingPlanes[fid].mParentTransform ? mSlicingPlanes[fid].mParentTransform.lossyScale : mSlicingPlanes[fid].transform.lossyScale));
+                mPreviewSliceMat[fid].SetMatrix("_planeMat", Matrix4x4.TRS(
+                    mSlicingPlanes[fid].transform.position,
+                    mSlicingPlanes[fid].transform.rotation,
+                    mSlicingPlanes[fid].mParentTransform ? mSlicingPlanes[fid].mParentTransform.lossyScale : mSlicingPlanes[fid].transform.lossyScale));
+            }
+
 
             mPreviewSlices[fid].GetComponentInChildren<Image>().material = mPreviewSliceMat[fid];
         }
+        mScrollConsumed = true;
 
         //DO NOT TOUCH!
         if (mTargetId < 0 || !VolumeObjectFactory.gHandGrabbleDirty) return;

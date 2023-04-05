@@ -189,19 +189,4 @@ public class VolumeDataEdit : BasicMutipleTargetUI
         AddOptionToTargetDropDown("Volume " + mIsVisibles.Count.ToString(), targetOnNew);
         DropdownValueChanged(mIsVisibles.Count);
     }
-    private void Update()
-    {
-        if (VolumeObjectFactory.gVolumeScaleDirty)
-        {
-            //var targetTransform = mHandGrabInteractableObjs[mTargetId].transform.parent.Find("TargetObject");
-            //var targetLossyScaleSize = targetTransform.lossyScale;
-            //mManipulator.transform.localScale = Vector3.one * mManipulatorLossyScale * 1.5f * VolumeObjectFactory.gTargetVolume.GetVolumeUnifiedScale();
-        }
-    }
-    private void LateUpdate()
-    {
-        VolumeObjectFactory.gHandGrabbleDirty = false;
-        VolumeObjectFactory.gVolumeScaleDirty = false;
-    }
-
 }

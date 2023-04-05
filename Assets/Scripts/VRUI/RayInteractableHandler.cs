@@ -6,15 +6,25 @@ using UnityVolumeRendering;
 
 public class RayInteractableHandler : MonoBehaviour
 {
-    public VolumeDataEdit VolumeManager;
-    public RayInteractorCursorVisual RightControllerCursor;
+    //public VolumeDataEdit VolumeManager;
+    //public RayInteractorCursorVisual RightControllerCursor;
+    [SerializeField]
+    private Transform RightFingerTip;
+    [SerializeField]
+    private Transform RightHandControllerFingerTip;
+    //public Transform LeftFingerTip;
+    //public Transform LeftHandControllerFingerTip;
 
     protected Transform mContentCanvas;
-    protected Transform mMesh;
-    protected List<Transform> mHandles = new List<Transform>();
+    private Transform mMeshTransform;
+    protected Mesh mMesh = null;
+    protected Dictionary<int, Transform> mHandles = new Dictionary<int, Transform>();
+    protected List<int> mHandleIds = new List<int>();
 
     protected int mTargetHandle = -1;
-    protected int mHightlightHandleIndex;
+    protected int mTargetHandleIndex = -1;
+
+    protected int mHightlightHandle;
 
     protected Vector2 mHorizontalBoarderLimit;
     protected Vector2 mVerticalBoarderLimit;
@@ -27,27 +37,26 @@ public class RayInteractableHandler : MonoBehaviour
     protected Vector2 mCursorPosInCanvas;
 
     public static bool TFDirty = false;
+    private bool mUseHand = false;
 
-    //FENGYIN!! PLEASE DO NOT TOUCH, OTHERWISE IT WON'T ALIGN
-    protected readonly float Comp = 0.06f;
-    protected readonly float CompY = -0.45f;
-
+    private int mTotalHandlerNum = 0;
     private void ChangeHighlightHandle(int index, bool highlight)
     {
-        if (index < 0 || index > mHandles.Count - 1) return;
+        if (index < 0) return;
         mHandles[index].Find("highlight").gameObject.SetActive(highlight);
     }
 
     protected void UpdateHighlightHandle(int new_highlight)
     {
-        ChangeHighlightHandle(mHightlightHandleIndex, false);
-        mHightlightHandleIndex = new_highlight;
-        ChangeHighlightHandle(mHightlightHandleIndex, true);
+        ChangeHighlightHandle(mHightlightHandle, false);
+        mHightlightHandle = new_highlight;
+        ChangeHighlightHandle(mHightlightHandle, true);
     }
     protected void RemoveHandleAt(int index)
     {
         GameObject.Destroy(mHandles[index].gameObject);
-        mHandles.RemoveAt(index);
+        mHandles.Remove(index);
+        mHandleIds.Remove(index);
     }
 
     public virtual void OnReset()
@@ -57,9 +66,11 @@ public class RayInteractableHandler : MonoBehaviour
     
     protected void ClearHandles()
     {
-        mTargetHandle = -1; mHightlightHandleIndex = -1;
-        foreach (Transform handle in mHandles) GameObject.Destroy(handle.gameObject);
+        mTargetHandle = -1; mTargetHandleIndex = -1; mHightlightHandle = -1; 
+        mTotalHandlerNum = 0;
+        foreach (Transform handle in mHandles.Values) GameObject.Destroy(handle.gameObject);
         mHandles.Clear();
+        mHandleIds.Clear();
     }
 
     protected bool CursorHitObject(Vector2 cursorPos, in RectTransform rt, bool checkX, bool checkY)
@@ -79,7 +90,6 @@ public class RayInteractableHandler : MonoBehaviour
         return true;
     }
 
-    //protected void AddHandleAtPosition(float pos, Color color)
     protected void AddHandleAtPosition(string HandlePrefabPath, Vector3 anchorPos, Color color)
     {
         var handle = GameObject.Instantiate(Resources.Load<GameObject>(HandlePrefabPath)).transform;
@@ -91,14 +101,16 @@ public class RayInteractableHandler : MonoBehaviour
         float H, S, V;
         Color.RGBToHSV(color, out H, out S, out V);
         handle.GetComponent<Image>().color = Color.HSVToRGB(H, S, V * 0.5f);
-        handle.name = "handle " + mHandles.Count;
-        
-        mHandles.Add(handle);
+        handle.name = "handle " + mTotalHandlerNum;
+        handle.GetComponent<InteractableHandlerButton>().Initialize(this, mTotalHandlerNum);
+        mHandles.Add(mTotalHandlerNum, handle);
+        mHandleIds.Add(mTotalHandlerNum);
+        UpdateHighlightHandle(mTotalHandlerNum);
+        mTotalHandlerNum++;
     }
-
     private void Awake()
     {
-        mMesh = this.transform.Find("Mesh");
+        mMeshTransform = this.transform.Find("Mesh");
 
         var outer_canvas = transform.Find("Canvas");
         mContentCanvas = outer_canvas.Find("Content");
@@ -110,64 +122,93 @@ public class RayInteractableHandler : MonoBehaviour
         mHorizontalBoarderLimit = new Vector2(boarder_size.x, mOuterSize.x - boarder_size.x);
         mVerticalBoarderLimit = new Vector2(boarder_size.y, mOuterSize.y - boarder_size.y);
 
-        mInnerScaleInv = new Vector2(1.0f / mMesh.lossyScale.x, 1.0f/mMesh.lossyScale.y);
+        mInnerScaleInv = new Vector2(1.0f / mMeshTransform.lossyScale.x, 1.0f/ mMeshTransform.lossyScale.y);
         mInnerSizeInv = new Vector2(1.0f / mInnerSize.x, 1.0f / mInnerSize.y);
+
+        mUseHand = RightFingerTip.gameObject.activeInHierarchy;
     }
     private void Start()
     {
         if (!VolumeObjectFactory.gTargetVolume) return;
         OnReset();
     }
-
-    protected void CheckHandleHit(bool checkX = true, bool checkY = true)
+    public void OnHandlerPressed(int target)
     {
-        Vector2 CursorPos = Vector2.zero;
-        Vector3 CursorInMesh = mMesh.transform.InverseTransformPoint(RightControllerCursor.transform.position);
-        if (checkX)
-        {
-            CursorPos.x = (CursorInMesh.x * mInnerScaleInv.x + 0.5f) * mOuterSize.x;
-            CursorPos.x += Comp * (mOuterSize.x * 0.5f - CursorPos.x);
-        }
-        if (checkY)
-        {
-            CursorPos.y = (CursorInMesh.y * mInnerScaleInv.y + 0.5f) * mOuterSize.y;
-            CursorPos.y += CompY * (mOuterSize.y * 0.5f - CursorPos.y);
-        }
-
-        //check if any handle hits
-        for(int i=0; i<mHandles.Count; i++)
-        {
-            if (CursorHitObject(CursorPos, mHandles[i].GetComponent<RectTransform>(), checkX, checkY))
-            {
-                ChangeHighlightHandle(mHightlightHandleIndex, false);
-                ChangeHighlightHandle(i, true);
-                mTargetHandle = mHightlightHandleIndex = i;
-                break;
-            }
-        }
+        ChangeHighlightHandle(mHightlightHandle, false);
+        ChangeHighlightHandle(target, true);
+        mTargetHandle = mHightlightHandle = target;
+        mTargetHandleIndex = mHandleIds.IndexOf(mTargetHandle);
     }
-    protected void UnTargetHandle()
+    public void OnHandlerReleased()
     {
         if (mTargetHandle < 0) return;
-        mTargetHandle = -1;
+        mTargetHandle = -1; mTargetHandleIndex = -1;
     }
+    private Vector2 GetCursorPos()
+    {
+        // Convert cursor position to local space of the mesh
+        Vector3 cursorInMesh = mMeshTransform.InverseTransformPoint(mUseHand?RightFingerTip.position:RightHandControllerFingerTip.position);
+        cursorInMesh.z = .0f;
+        if (!mMesh)
+            mMesh = mMeshTransform.GetComponent<MeshFilter>().mesh;
+        if (mMesh.bounds.Contains(cursorInMesh))
+        {
+            // Compute the texture coordinates of the cursor position
+            return new Vector2((cursorInMesh.x / mMesh.bounds.size.x + 0.5f)*mInnerSize.x, (cursorInMesh.y / mMesh.bounds.size.y + 0.5f) * mInnerSize.y);
+        }
+        return Vector2.zero;
+    }
+    //protected void CheckHandleHit(bool checkX = true, bool checkY = true)
+    //{
 
+
+    //    //Vector2 CursorPos = Vector2.zero;
+    //    //Vector3 CursorInMesh = mMesh.transform.InverseTransformPoint(RightFingerTip.position);
+
+    //    //if (checkX)
+    //    //{
+    //    //    CursorPos.x = (CursorInMesh.x * mInnerScaleInv.x + 0.5f) * mOuterSize.x;
+    //    //    CursorPos.x += Comp * (mOuterSize.x * 0.5f - CursorPos.x);
+    //    //}
+    //    //if (checkY)
+    //    //{
+    //    //    CursorPos.y = (CursorInMesh.y * mInnerScaleInv.y + 0.5f) * mOuterSize.y;
+    //    //    CursorPos.y += CompY * (mOuterSize.y * 0.5f - CursorPos.y);
+    //    //}
+    //    Vector2 CursorPos = GetCursorPos();
+
+    //    //check if any handle hits
+    //    for (int i=0; i<mHandles.Count; i++)
+    //    {
+    //        if (CursorHitObject(CursorPos, mHandles[i].GetComponent<RectTransform>(), checkX, checkY))
+    //        {
+    //            ChangeHighlightHandle(mHightlightHandle, false);
+    //            ChangeHighlightHandle(i, true);
+    //            mTargetHandle = mHightlightHandle = i;
+    //            break;
+    //        }
+    //    }
+    //}
+    //protected void UnTargetHandle()
+    //{
+    //    if (mTargetHandle < 0) return;
+    //    mTargetHandle = -1;
+    //}
     protected bool CheckCursorPosInOuterCanvas(bool checkX, bool checkY)
     {
+        mCursorPosInCanvas = GetCursorPos();
+
         if (checkX)
         {
-            mCursorPosInCanvas.x = (mMesh.transform.InverseTransformPoint(RightControllerCursor.transform.position).x * mInnerScaleInv.x + 0.5f) * mOuterSize.x;
-            mCursorPosInCanvas.x += Comp * (mOuterSize.x * 0.5f - mCursorPosInCanvas.x);
             if (mCursorPosInCanvas.x < mHorizontalBoarderLimit.x || mCursorPosInCanvas.x > mHorizontalBoarderLimit.y) return false;
         }
         if (checkY)
         {
-            mCursorPosInCanvas.y = (mMesh.transform.InverseTransformPoint(RightControllerCursor.transform.position).y * mInnerScaleInv.y + 0.5f) * mOuterSize.y;
-            mCursorPosInCanvas.y += CompY * (mOuterSize.y * 0.5f - mCursorPosInCanvas.y);
             if (mCursorPosInCanvas.y < mVerticalBoarderLimit.x || mCursorPosInCanvas.y > mVerticalBoarderLimit.y) return false;
         }
         return true;
     }
+
     private void LateUpdate()
     {
         if (TFDirty)

@@ -6,21 +6,22 @@ public class BasicMutipleTargetUI : MonoBehaviour
 {
     public TMPro.TMP_Dropdown TargetDropDown;
     public Button VisibilityBtn;
-
-    protected int mTargetId = -1;
+    
+    [HideInInspector]
+    public int mTargetId = -1;
     protected int mTotalId = 0;
 
-    protected List<bool> mIsVisibles = new List<bool>();
-    protected List<Transform> mTargetObjs = new List<Transform>();
+    [HideInInspector]
+    public List<bool> mIsVisibles = new List<bool>();
+    [HideInInspector]
+    public List<Transform> mTargetObjs = new List<Transform>();
+    
     protected List<GameObject> mHandGrabInteractableObjs = new List<GameObject>();
     protected List<MeshRenderer> mBBoxRenderer = new List<MeshRenderer>();
 
     protected bool mVisibleButtonStatus = true;
     protected Color mPlaneColor;
     protected Color mPlaneColorInactive;
-
-    //protected GameObject mManipulator;
-    //protected bool mManipulateMode;
 
     protected void Initialize()
     {
@@ -96,7 +97,8 @@ public class BasicMutipleTargetUI : MonoBehaviour
         }
     }
 
-    protected virtual void ResetManipulator() { }
+    protected virtual void DropdownChangeFinalize() { }
+    //protected virtual void ResetManipulator() { }
 
     protected void DropdownValueChanged(int value)
     {
@@ -115,7 +117,8 @@ public class BasicMutipleTargetUI : MonoBehaviour
         }
 
         mTargetId = value - 1;
-        ResetManipulator();
+        DropdownChangeFinalize();
+        //ResetManipulator();
     }
     /*
     protected void InitializeManipulator()

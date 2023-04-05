@@ -12,7 +12,7 @@ public class CylinderUI : MonoBehaviour
         CROSS_SECTION_PANEL,
         NEEDLING_PANEL,
         WORKING_TABLE_PANEL,
-        DRAW_PANEL,
+        //DRAW_PANEL,
         END_PANEL
     }
     //public Transform DataPanel = null;
@@ -22,14 +22,14 @@ public class CylinderUI : MonoBehaviour
     public Transform CrossSectionPanel;
     public Transform NeedlingPanel;
     public Transform WorkingTable;
-    public Transform DrawingPanel;
+    //public Transform DrawingPanel;
 
     private bool[] mIsPanelOn;
-    //public VolumeRenderedObject mTargetVolume { get; private set; } = null;
     private void Awake()
     {
-        UnityVolumeRendering.VolumeObjectFactory.GatherObjectsInScene();
+        VolumeObjectFactory.GatherObjectsInScene();
         mIsPanelOn = Enumerable.Repeat(false, (int)CylinderPanels.END_PANEL).ToArray();
+        StandardModelFactory.setCrossSectionManager(CrossSectionPanel.GetComponentInChildren<CrossSectionEdit>());
     }
     private void change_panel_status(in GameObject obj, int pos)
     {
@@ -78,21 +78,10 @@ public class CylinderUI : MonoBehaviour
         change_panel_status(
             NeedlingPanel.gameObject,
             (int)CylinderPanels.NEEDLING_PANEL);
-        try
-        {
-            NeedlingPanel.GetComponent<NeedlingEdit>().OnChangePanelStatus(mIsPanelOn[(int)CylinderPanels.NEEDLING_PANEL]);
-        }catch(Exception e)
-        {
-            //do nothing
-        }
-
     }
-    public void OnChangeDrawing()
+    public void OnChangeStandardModel()
     {
-        if (!DrawingPanel) return;
-        change_panel_status(
-            DrawingPanel.gameObject,
-            (int)CylinderPanels.DRAW_PANEL);
+        StandardModelFactory.OnChangeStandardModelStatus();
     }
 
     public void OnChangeWorkingTable()
@@ -102,7 +91,7 @@ public class CylinderUI : MonoBehaviour
             WorkingTable.gameObject,
             (int)CylinderPanels.WORKING_TABLE_PANEL);
 
-        UnityVolumeRendering.VolumeObjectFactory.OnWorkingTableChange(mIsPanelOn[(int)CylinderPanels.WORKING_TABLE_PANEL]);
+        VolumeObjectFactory.OnWorkingTableChange(mIsPanelOn[(int)CylinderPanels.WORKING_TABLE_PANEL]);
         
         //////MENGHE: GIVE OPTIONS TO WORK ON OTHER STUFF
         //if (mIsPanelOn[(int)CylinderPanels.WORKING_TABLE_PANEL])

@@ -26,26 +26,38 @@ public class HistHandler : RayInteractableHandler
             "Prefabs/HistControllPoint",
             new Vector3(0.5f * mInnerSize.x, 0.5f * mInnerSize.y, -0.001f),
             Color.red);
-
-        UpdateHighlightHandle(mHandles.Count - 1);
     }
     public void OnRemoveHandle()
     {
-        if (mHightlightHandleIndex < 0) return;
+        if (mHightlightHandle < 0) return;
 
-        VolumeObjectFactory.gTargetVolume.transferFunction.alphaControlPoints.RemoveAt(mHightlightHandleIndex);
+        VolumeObjectFactory.gTargetVolume.transferFunction.alphaControlPoints.RemoveAt(mHandleIds.IndexOf(mHightlightHandle));
         TFDirty = true;
-        RemoveHandleAt(mHightlightHandleIndex);
-        mHightlightHandleIndex = -1;
+        RemoveHandleAt(mHightlightHandle);
+        mHightlightHandle = -1;
     }
-    public void OnSelect()
+    public void OnResetHandles()
     {
-        CheckHandleHit(true, true);
+        if (!VolumeObjectFactory.gTargetVolume) return;
+
+        var tf = VolumeObjectFactory.gTargetVolume.transferFunction;
+        tf.alphaControlPoints.Clear();
+        tf.alphaControlPoints.Add(new TFAlphaControlPoint(0.2f, 0.0f));
+        tf.alphaControlPoints.Add(new TFAlphaControlPoint(0.8f, 1.0f));
+        if (VolumeObjectFactory.gTargetVolume)
+            VolumeObjectFactory.gTargetVolume.SetTransferFunction(tf);
+        VolumeObjectFactory.gTargetVolume.SetTransferFunction(tf);
+        OnReset();
     }
-    public void OnUnSelect()
-    {
-        UnTargetHandle();
-    }
+
+    //public void OnSelect()
+    //{
+    //    CheckHandleHit(true, true);
+    //}
+    //public void OnUnSelect()
+    //{
+    //    UnTargetHandle();
+    //}
 
     void Update()
     {
@@ -57,10 +69,10 @@ public class HistHandler : RayInteractableHandler
         mHandles[mTargetHandle].GetComponent<RectTransform>().anchoredPosition = handle;
 
         //ref TransferFunction tf = ref VolumeObjectFactory.gTargetVolume.transferFunction;
-        TFAlphaControlPoint alphaPoint = VolumeObjectFactory.gTargetVolume.transferFunction.alphaControlPoints[mTargetHandle];
+        TFAlphaControlPoint alphaPoint = VolumeObjectFactory.gTargetVolume.transferFunction.alphaControlPoints[mTargetHandleIndex];
         alphaPoint.dataValue = Mathf.Clamp(handle.x * mInnerSizeInv.x, 0.0f, 1.0f);
         alphaPoint.alphaValue = Mathf.Clamp(handle.y * mInnerSizeInv.y, 0.0f, 1.0f);
-        VolumeObjectFactory.gTargetVolume.transferFunction.alphaControlPoints[mTargetHandle] = alphaPoint;
+        VolumeObjectFactory.gTargetVolume.transferFunction.alphaControlPoints[mTargetHandleIndex] = alphaPoint;
         TFDirty = true;
     }
 }

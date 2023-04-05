@@ -6,6 +6,7 @@ public class CrossSectionEdit : BasicMutipleTargetUI
     //public VolumeDataEdit VolumeManager;
     //public Button ManipulationBtn;
     //public Transform ControllerCursor;
+    private readonly bool mTargetOnNewPlane = true;
     private void Awake()
     {
         mPlaneColor = new Color(1.0f, 0.6f, .0f);
@@ -67,9 +68,11 @@ public class CrossSectionEdit : BasicMutipleTargetUI
         mHandGrabInteractableObjs.Add(planeRoot.Find("HandGrabInteractable").gameObject);
         mIsVisibles.Add(true);
 
-        AddOptionToTargetDropDown("CSPlane " + (++mTotalId));
-
+        AddOptionToTargetDropDown("CSPlane " + (++mTotalId), mTargetOnNewPlane);
         DropdownValueChanged(mIsVisibles.Count);
+
+        StandardModelFactory.AddCrossSectionPlane(planeRoot.gameObject, mTargetOnNewPlane);
+
 
         //if (mManipulateMode) ResetManipulator();
     }
@@ -77,7 +80,16 @@ public class CrossSectionEdit : BasicMutipleTargetUI
     {
         if (!VolumeObjectFactory.gTargetVolume || mTargetId < 0) return;
         VolumeObjectFactory.gTargetVolume.DeleteCrossSectionPlaneAt(mTargetId);
+        StandardModelFactory.DeleteCrossSectionPlaneAt(mTargetId);
         OnRemoveTarget();
+    }
+    protected override void DropdownChangeFinalize() {
+        StandardModelFactory.OnChangeCrossSectionTarget(mTargetId, mTargetId<0?null:mTargetObjs[mTargetId]);
+    }
+    protected override void OnChangeVisibilityStatus()
+    {
+        base.OnChangeVisibilityStatus();
+        StandardModelFactory.OnChangeVisibility(mTargetId, mIsVisibles[mTargetId]);
     }
 
     private void Update()

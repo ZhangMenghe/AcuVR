@@ -2,12 +2,9 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityVolumeRendering;
 
-//menghe:REMOVE
-[ExecuteInEditMode]
 public class Transferfunction1DEdit : MonoBehaviour
 {
     public Transform ColorSchemeDropDownObj;
-    //public Transform MeshTransform;
     public Image tfGUIImage;
     public Image PaletteImage;
     public PaletteHandler PalettePanel;

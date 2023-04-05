@@ -24,16 +24,16 @@ namespace UnityVolumeRendering
     [ExecuteInEditMode]
     public class VolumeRenderedObject : MonoBehaviour
     {
-        [SerializeField, HideInInspector]
+        [HideInInspector]
         public TransferFunction transferFunction;
 
-        [SerializeField, HideInInspector]
+        [HideInInspector]
         public TransferFunction2D transferFunction2D;
 
-        [SerializeField, HideInInspector]
+        [HideInInspector]
         public VolumeDataset dataset;
 
-        [SerializeField, HideInInspector]
+        [HideInInspector]
         public MeshRenderer meshRenderer;
 
         [SerializeField, HideInInspector]
@@ -76,7 +76,7 @@ namespace UnityVolumeRendering
 
         public void onReset()
         {
-            m_unified_scale = 1.0f;
+            SetVolumeUnifiedScale(1.0f);
         }
         public Transform CreateCrossSectionPlane()
         {
@@ -104,7 +104,6 @@ namespace UnityVolumeRendering
                 cross_plane.localPosition = Vector3.zero;
                 cross_plane.localScale = Vector3.one * 1.2f;
             }
-            //GameObject quad = GameObject.Instantiate((GameObject)Resources.Load("Prefabs/CrossSectionPlane"));
             cross_plane.name = "CSPlane" + m_cs_planes.Count;
             meshRenderer.sharedMaterial.EnableKeyword("CUTOUT_PLANE");
             return cross_plane;
@@ -462,29 +461,35 @@ namespace UnityVolumeRendering
             //MENGHE! ONLY FOR DEBUG!!!!
             DisplayRackFactory.RenderFrames();
             //MENGHE: DO NOT CHECK EVERYTIME
-            bool need_update = false;
-            for(int i=m_cs_planes.Count-1; i>=0; i--) { 
-                if (m_cs_planes[i] == null) { m_cs_planes.Remove(m_cs_planes[i]); continue; }
-                if (m_cs_planes[i].hasChanged) { need_update = true;}
-            }
-            if (m_cs_planes.Count == 0) { meshRenderer.sharedMaterial.DisableKeyword("CUTOUT_PLANE"); need_update = false; }
-            if (need_update)
+            //bool need_update = false;
+            //for(int i=m_cs_planes.Count-1; i>=0; i--) { 
+            //    if (m_cs_planes[i] == null) { m_cs_planes.Remove(m_cs_planes[i]); continue; }
+            //    if (m_cs_planes[i].hasChanged) { need_update = true;}
+            //}
+            if (m_cs_planes.Count == 0) 
+                meshRenderer.sharedMaterial.DisableKeyword("CUTOUT_PLANE");
+            else
             {
                 int plane_count = Mathf.Min(m_cs_planes.Count, MAX_CS_PLANE_NUM);
                 int active_count = plane_count;
-                for (int i = 0; i < plane_count; i++)
+                for (int i = 0, activeId=0; i < plane_count; i++)
                 {
                     if (!m_cs_planes[i].gameObject.activeInHierarchy){
                         active_count--; continue; 
                     }
 
-                    m_cs_plane_matrices[i] = m_cs_planes[i].worldToLocalMatrix * transform.localToWorldMatrix;
+                    m_cs_plane_matrices[activeId++] = m_cs_planes[i].worldToLocalMatrix * transform.localToWorldMatrix;
                 }
                 
                 meshRenderer.sharedMaterial.EnableKeyword("CUTOUT_PLANE");
                 meshRenderer.sharedMaterial.SetInteger("_CrossSectionNum", active_count);
                 meshRenderer.sharedMaterial.SetMatrixArray("_CrossSectionMatrices", m_cs_plane_matrices);
             }
+        }
+        private void LateUpdate()
+        {
+            VolumeObjectFactory.gHandGrabbleDirty = false;
+            VolumeObjectFactory.gVolumeScaleDirty = false;
         }
     }
 }

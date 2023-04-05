@@ -2,6 +2,12 @@ using UnityEngine;
 using UnityVolumeRendering;
 public class VolumeButtonManager : BasicSingleObjectButtonGroupManager
 {
+    private void Awake()
+    {
+        INITIAL_VISIBLE = true;
+        INITIAL_LOCK = false;
+        OnAwake();
+    }
     private void Start()
     {
         Vector3 sz = TargetObject.transform.localScale;

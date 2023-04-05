@@ -30,27 +30,35 @@ public class PaletteHandler : RayInteractableHandler
             "Prefabs/PaletteHandle",
             new Vector3(0.5f * mInnerSize.x, .0f, -0.001f),
             newColour);
-
-        UpdateHighlightHandle(mHandles.Count - 1);
     }
     public void OnRemoveHandle()
     {
-        if (mHightlightHandleIndex < 0) return;
+        if (mHightlightHandle < 0) return;
+     VolumeObjectFactory.gTargetVolume.transferFunction.colourControlPoints.RemoveAt(mHandleIds.IndexOf(mHightlightHandle));
 
-        VolumeObjectFactory.gTargetVolume.transferFunction.colourControlPoints.RemoveAt(mHightlightHandleIndex);
         //VolumeObjectFactory.gTargetVolume.transferFunction.GenerateTexture();
         TFDirty = true;
-        RemoveHandleAt(mHightlightHandleIndex);
-        mHightlightHandleIndex = -1;
+        RemoveHandleAt(mHightlightHandle);
+        mHightlightHandle = -1;
     }
-    public void OnSelect()
+    public void OnResetHandles()
     {
-        CheckHandleHit(true, false);
+        if (!VolumeObjectFactory.gTargetVolume) return;
+
+        var tf = VolumeObjectFactory.gTargetVolume.transferFunction;
+        tf.colourControlPoints.Clear();
+        tf.colourControlPoints.Add(new TFColourControlPoint(0.5f, new Color(0.469f, 0.354f, 0.223f, 1.0f)));
+        VolumeObjectFactory.gTargetVolume.SetTransferFunction(tf);
+        OnReset();
     }
-    public void OnUnSelect()
-    {
-        UnTargetHandle();
-    }
+    //public void OnSelect()
+    //{
+    //    CheckHandleHit(true, false);
+    //}
+    //public void OnUnSelect()
+    //{
+    //    UnTargetHandle();
+    //}
 
     void Update()
     {
@@ -61,9 +69,9 @@ public class PaletteHandler : RayInteractableHandler
         mHandles[mTargetHandle].GetComponent<RectTransform>().anchoredPosition = new Vector2(handleX, .0f);
 
         var tf = VolumeObjectFactory.gTargetVolume.transferFunction;
-        TFColourControlPoint colPoint = tf.colourControlPoints[mTargetHandle];
+        TFColourControlPoint colPoint = tf.colourControlPoints[mTargetHandleIndex];
         colPoint.dataValue = Mathf.Clamp(handleX * mInnerSizeInv.x, 0.0f, 1.0f);
-        tf.colourControlPoints[mTargetHandle] = colPoint;
+        tf.colourControlPoints[mTargetHandleIndex] = colPoint;
         TFDirty = true;
     }
 }

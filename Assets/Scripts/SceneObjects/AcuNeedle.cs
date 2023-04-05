@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityVolumeRendering;
+//ONLY IN EDIT MODE
 [ExecuteInEditMode]
 public class AcuNeedle : MonoBehaviour
 {

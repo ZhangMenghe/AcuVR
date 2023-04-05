@@ -12,7 +12,6 @@ Shader "VolumeRendering/PolySliceRenderingShader"
     {
         Tags { "Queue" = "Transparent" }
         LOD 100
-        Cull Off
         Blend SrcAlpha OneMinusSrcAlpha
         Pass
         {
@@ -21,6 +20,7 @@ Shader "VolumeRendering/PolySliceRenderingShader"
             #pragma fragment frag
             #pragma multi_compile __ ANNOTATION_ON
             #pragma multi_compile __ OVERRIDE_MODEL_MAT
+            #pragma multi_compile __ DISCARD_ALL
 
             #include "UnityCG.cginc"
 
@@ -45,6 +45,14 @@ Shader "VolumeRendering/PolySliceRenderingShader"
             // Plane transform
             uniform float4x4 _planeMat;
             uniform float4x4 _planeModelMat;
+            float4 _ClipRect;
+            // Declare the clip function
+            void clip(float4 vertex : SV_POSITION, float4 clipRect : UNITY_MATRIX_CLIPRECT, out float4 outPosition : SV_POSITION)
+            {
+                outPosition = vertex;
+                outPosition.x = clamp(outPosition.x, clipRect.x, clipRect.z);
+                outPosition.y = clamp(outPosition.y, clipRect.y, clipRect.w);
+            }
 
             v2f vert (appdata v)
             {
@@ -58,11 +66,17 @@ Shader "VolumeRendering/PolySliceRenderingShader"
                 float3 vert = mul(_planeMat, float4(0.5f - v.uv.x, 0.0f, 0.5f - v.uv.y, 1.0f));
                 o.relVert = mul(_parentInverseMat, float4(vert, 1.0f));
                 o.uv = v.uv;
+
+                clip(o.vertex, _ClipRect, o.vertex); // Call the clip function
+
                 return o;
             }
             
             fixed4 frag(v2f i) : SV_Target
             {
+#ifdef DISCARD_ALL
+                discard;
+#endif
                 float3 dataCoord = i.relVert + float3(0.5f, 0.5f, 0.5f);
                 if (dataCoord.x > 1.0f || dataCoord.y > 1.0f || dataCoord.z > 1.0f || dataCoord.x < 0.0f || dataCoord.y < 0.0f || dataCoord.z < 0.0f)
                 {

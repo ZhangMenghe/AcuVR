@@ -12,25 +12,29 @@ public class BasicSingleObjectButtonGroupManager : MonoBehaviour
     public Button VisibleBtn;
     public Button ResetBtn;
 
-    private static readonly bool INITIAL_VISIBLE = true;
-    private static readonly bool INITIAL_LOCK = false;
+    protected bool INITIAL_VISIBLE;
+    protected bool INITIAL_LOCK;
 
-    protected bool mIsVisible = INITIAL_VISIBLE;
-    protected bool mLock = INITIAL_LOCK;
+    protected bool mIsVisible;
+    protected bool mLock;
 
-    private void Awake()
+    protected void OnAwake()
     {
+        if (LockBtn)
         LockBtn.onClick.AddListener(delegate {
             OnChangeLockStatus();
         });
-        VisibleBtn.onClick.AddListener(delegate {
+        if (VisibleBtn)
+            VisibleBtn.onClick.AddListener(delegate {
             OnChangeVisibilityStatus();
         });
-        ResetBtn.onClick.AddListener(delegate {
+        if (ResetBtn)
+            ResetBtn.onClick.AddListener(delegate {
             OnReset();
         });
 
-        OnReset();
+        mLock = INITIAL_LOCK;
+        mIsVisible = INITIAL_VISIBLE;
     }
     protected virtual void OnReset()
     {

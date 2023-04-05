@@ -4,37 +4,30 @@ using UnityEngine;
 
 public class WorkingTableController : MonoBehaviour
 {
-    public GameObject Visuals;
-    private readonly float ChangeSpeed = 0.0005f;
-    private bool mKeepChanging = false;
-    private bool mIsUp;
     [SerializeField]
     private Oculus.Interaction.RayInteractable rayInteractable;
 
+    private bool mKeepChanging = false;
+    private bool mIsUp;
+
+    private readonly float ChangeSpeed = 0.0005f;
+
     public void OnCanvasSelected()
     {
+        float hitHeight = transform.InverseTransformPoint(rayInteractable.SurfaceHit.Point).y;
+
+        if (Mathf.Abs(hitHeight) > 0.095f || Mathf.Abs(hitHeight) < 0.005f) return;
+
         mKeepChanging = true;
-        
-        Debug.LogWarning("======"+ transform.InverseTransformPoint(rayInteractable.SurfaceHit.Point));
+        mIsUp = hitHeight > 0;
     }
     public void OnCanvasDeSelected()
     {
         mKeepChanging = false;
-
-        transform.localPosition += Visuals.transform.localPosition;
-        Visuals.transform.localPosition = Vector3.zero;
-    }
-    public void OnUpButtonClicked()
-    {
-        //mIsUp = true;
-    }
-    public void OnDownButtonClicked()
-    {
-        //mIsUp = false;
     }
     private void Update()
     {
-        //if (mKeepChanging)
-            //Visuals.transform.localPosition += new Vector3(.0f, mIsUp ? ChangeSpeed : -ChangeSpeed, .0f);
+        if (mKeepChanging)
+            transform.localPosition += new Vector3(.0f, mIsUp ? ChangeSpeed : -ChangeSpeed, .0f);
     }
 }

@@ -1,102 +1,106 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 using UnityVolumeRendering;
 
-public class NeedlingEdit : BasicMutipleTargetUI
+public class NeedlingEdit : MonoBehaviour
 {
-    public VolumeDataEdit VolumeManager;
+    public TMPro.TMP_Dropdown TargetDropDown;
+    public Button NeedleTargetButton;
 
-    //MENGHE: ENABLE/DISABLE Controller and ControllerHand?
-    public Transform OVRController;
-    public Transform OVRControllerHands;
-
-    private Transform mMagViewDisplay = null;
-    private MeshRenderer mMagViewRenderer = null;
     private List<Transform> mNeedleObjs = new List<Transform>();
+    private List<string> mNeedleNames = new List<string>();
 
     private Transform mAcuNeedleRoot;
+
+    private int mTargetId = -1;
+    private int mTotalId = 0;
+    private bool mNeedleTargetVolume = true;
     private void Start()
     {
         mAcuNeedleRoot = new GameObject("NeedleRoot").transform;
-        Initialize();
-
-        if (DisplayRackFactory.AttachToRack(DisplayRackFactory.DisplayRacks.CURVE_LEFT_BOARD, "Magnification View"))
-        {
-            var mDisplayRack = DisplayRackFactory.GetDisplayRack(DisplayRackFactory.DisplayRacks.CURVE_LEFT_BOARD);
-
-            mMagViewDisplay = GameObject.CreatePrimitive(PrimitiveType.Quad).transform;
-
-            mMagViewDisplay.parent = mDisplayRack;
-            mMagViewDisplay.localPosition = new Vector3(.0f, -0.32f, -0.01f);
-            mMagViewDisplay.localScale = new Vector3(0.5f, 0.3f, 1.0f);
-            mMagViewDisplay.localRotation = Quaternion.identity;
-
-            mMagViewRenderer = mMagViewDisplay.GetComponent<MeshRenderer>();
-            mMagViewRenderer.sharedMaterial = Resources.Load<Material>("RenderTextures/AcuNeedleRT");
-
-            //mDisplayRack.gameObject.SetActive(false);
-        }
+        mTargetId = -1;
+        TargetDropDown.onValueChanged.AddListener(delegate {
+            OnTargetValueChanged(TargetDropDown.value-1);
+        });
+        NeedleTargetButton.onClick.AddListener(delegate {
+            OnChangeNeedleTarget();
+        });
     }
+    private void ResetTargetNeedle()
+    {
+        mNeedleObjs[mTargetId].position = Camera.main.transform.position + new Vector3(.0f, .0f, 0.3f);
+        mNeedleObjs[mTargetId].rotation = Quaternion.identity;
+        mNeedleObjs[mTargetId].localScale = Vector3.one;
 
+        mNeedleObjs[mTargetId].GetComponent<GrabbaleAcuNeedle>().OnReset();
+    }
     public void OnAddNeedle()
     {
-        mIsVisibles.Add(true);
         mTotalId++;
 
-        var acuNeedleObj = GameObject.Instantiate(Resources.Load<GameObject>("Prefabs/AcuNeedle1")).transform;
+        var acuNeedleObj = GameObject.Instantiate(Resources.Load<GameObject>("Prefabs/AAAAcuNeedle")).transform;
         acuNeedleObj.name = "Needle " + mTotalId;
-        //acuNeedleObj.position = new Vector3(-1.3f, 1.5f, -1.0f);
         acuNeedleObj.parent = mAcuNeedleRoot;
-        acuNeedleObj.position = Camera.main.transform.position + new Vector3(.0f, .0f, 0.3f);
-        acuNeedleObj.rotation = Quaternion.identity;
-        acuNeedleObj.localScale = Vector3.one;
-
+        acuNeedleObj.GetComponent<GrabbaleAcuNeedle>().SetNeedlingManagerPanel(this);
         mNeedleObjs.Add(acuNeedleObj);
+        mNeedleNames.Add(acuNeedleObj.name);
         AddOptionToTargetDropDown(acuNeedleObj.name);
-        DropdownValueChanged(mIsVisibles.Count);
+        OnResetNeedle();
     }
-    public void OnRemoveNeedle()
+    public void OnResetNeedle()
     {
         if (mTargetId < 0) return;
+        ResetTargetNeedle();
+    }
+    public void OnRemoveNeedleFromList(string name)
+    {
+        int index = mNeedleNames.FindIndex(item => item == name);
+        if (index < 0) return;
 
-        if (mTargetId < mNeedleObjs.Count)
+        if(mTargetId >= 0)
         {
-            Destroy(mNeedleObjs[mTargetId].gameObject);
-
-            mNeedleObjs.RemoveAt(mTargetId);
+            if (index != mTargetId)
+                mNeedleObjs[mTargetId].GetComponent<GrabbaleAcuNeedle>().OnChangeTarget(false);
+            mTargetId = -1;
         }
-        RemoveTargetOptionFromDropDown();
-    }
-    public void OnChangePanelStatus(bool isOn)
-    {
-        DisplayRackFactory.SetDisplayRackVisibility(DisplayRackFactory.DisplayRacks.CURVE_LEFT_BOARD, isOn);
-    }
-    protected override void OnChangeVisibilityStatus()
-    {
-        if (mTargetId < 0) return;
-        base.OnChangeVisibilityStatus();
 
-        //mIsVisibles[mTargetId] = !mIsVisibles[mTargetId];
-        //mNeedleObjs[mTargetId].gameObject.SetActive(mIsVisibles[mTargetId]);
-        ////UpdateSprite(mIsVisibles[mTargetId]);
-        //VRUICommonUtils.SwapSprite(ref VisibilityBtn);
+        mNeedleObjs.RemoveAt(index);
+        mNeedleNames.RemoveAt(index);
+        RemoveTargetOptionFromDropDown(index);
+
+        if (mNeedleTargetVolume)
+            StandardModelFactory.OnDeleteNeedle(index);
     }
-    protected override void UpdateSnapableObjectStatus(int value)
+    private void OnChangeNeedleTarget()
     {
-        //maybe disable other needles?
+        mNeedleTargetVolume = !mNeedleTargetVolume;
+        VRUICommonUtils.SwapSprite(ref NeedleTargetButton);
+        //MENGHE:UNFINISHED
     }
 
-    private void OnDestroy()
+    private void RemoveTargetOptionFromDropDown(int target)
     {
-        DisplayRackFactory.DeAttachFromRack(DisplayRackFactory.DisplayRacks.CURVE_LEFT_BOARD);
+        TargetDropDown.options.RemoveAt(target + 1);
+        TargetDropDown.SetValueWithoutNotify(0);
     }
-
-    private void Update()
+    private void AddOptionToTargetDropDown(string entry)
     {
-        if (VolumeObjectFactory.gTargetVolume)
-        {
-            for (int i = 0; i < mNeedleObjs.Count; i++)
-                mNeedleObjs[i].localScale = Vector3.one * VolumeObjectFactory.gTargetVolume.GetVolumeUnifiedScale();
-        }
+        TMPro.TMP_Dropdown.OptionData newOption = new TMPro.TMP_Dropdown.OptionData();
+        newOption.text = entry;
+        TargetDropDown.options.Add(newOption);
+        TargetDropDown.value = mNeedleObjs.Count;
+        TargetDropDown.RefreshShownValue();
+
+        OnTargetValueChanged(mNeedleObjs.Count - 1);
+    }
+    private void OnTargetValueChanged(int newTarget)
+    {
+        if (mTargetId == newTarget) return;
+
+        if (mTargetId >= 0) mNeedleObjs[mTargetId].GetComponent<GrabbaleAcuNeedle>().OnChangeTarget(false);
+        if (newTarget >= 0) mNeedleObjs[newTarget].GetComponent<GrabbaleAcuNeedle>().OnChangeTarget(true);
+
+        mTargetId = newTarget;
     }
 }
