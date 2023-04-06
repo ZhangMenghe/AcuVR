@@ -19,12 +19,12 @@
 /[Rr]ecordings/
 
 # Uncomment this line if you wish to ignore the asset store tools plugin
-/[Aa]ssets/Oculus*
-/[Aa]ssets/XR*
-/[Aa]ssets/DICOM*
-/[Aa]ssets/3rdparty*
-/[Aa]ssets/TextMesh Pro/
-/[Aa]ssets/openDicom*
+# /[Aa]ssets/Oculus*
+# /[Aa]ssets/XR*
+# /[Aa]ssets/DICOM*
+# /[Aa]ssets/3rdparty*
+# /[Aa]ssets/TextMesh Pro/
+# /[Aa]ssets/openDicom*
 
 *.meta
 
