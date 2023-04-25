@@ -23,14 +23,14 @@ public class SlicingEdit : BasicMutipleTargetUI
     private float mSpacing = 2.0f;
     private float mLastScrollPosition = -10.0f;
     private bool mScrollConsumed = true;
+    private GrabbaleAcuNeedle mTargetNeedle=null;
     //private Transform mWorkingTable;
     //private string mLastWorkingTableTarget = "";
     //private bool mWorkingTableDirty;
     private void Awake()
     {
-        mPlaneColor = new Color(.15f, 0.5f, .25f);
-        mPlaneColorInactive = new Color(.25f, 0.35f, .3f);
-
+        mPlaneColor = new Color(.15f, 0.5f, .25f, 1.0f);
+        mPlaneColorInactive = new Color(.25f, 0.35f, .3f, 0.01f);
     }
     private void Start()
     {
@@ -39,10 +39,37 @@ public class SlicingEdit : BasicMutipleTargetUI
         mScrollWidth = scroll_rect.GetComponent<RectTransform>().sizeDelta.x;
         mScrollContentRect = scroll_rect.content.GetComponent<RectTransform>();
     }
+    public void DisableNeeldeProjection()
+    {
+        mTargetNeedle = null;
+        int vid = 0;
+        foreach(var plane in mTargetObjs)
+        {
+            if (mSliceVisibilities[vid++])
+            {
+                plane.GetComponent<SingleSlicingPlane>().OnDisableNeedleProject();
+                mPreviewSlices[vid - 1].transform.Find("ProjNeedlePlane").gameObject.SetActive(false);
+            }
+        }
+    }
+    public void EnableNeedleProjection(in GrabbaleAcuNeedle needle)
+    {
+        mTargetNeedle = needle;
+        int vid = 0;
+        foreach (var plane in mTargetObjs)
+        {
+            if (mSliceVisibilities[vid++])
+            {
+                plane.GetComponent<SingleSlicingPlane>().onEnableNeedleProject(needle.NeedleTipTransform, needle.NeedleEndTransform);
 
+                var proj_plane = mPreviewSlices[vid - 1].transform.Find("ProjNeedlePlane");
+                proj_plane.gameObject.SetActive(true);
+            }
+        }
+    }
     public void OnScrollValueChange(Vector2 scrollPosition)
     {
-        if (!mScrollConsumed) return;
+        if (!mScrollConsumed || mSliceVisibilities.Count==0) return;
         bool scroll_left = mLastScrollPosition < scrollPosition.x;
         int frontId, backId;
         for (frontId = 0; frontId < mSliceVisibilities.Count && !mSliceVisibilities[frontId]; frontId++) ;
@@ -90,18 +117,24 @@ public class SlicingEdit : BasicMutipleTargetUI
         if (!VolumeObjectFactory.gTargetVolume) return;
 
         Transform planeRoot = VolumeObjectFactory.gTargetVolume.CreateSlicingPlane();
+        planeRoot.GetComponent<SingleSlicingPlane>().Initialized(++mTotalId);
+
+
+
         var slicePlane = VolumeObjectFactory.gTargetVolume.SlicingPlaneList[mIsVisibles.Count];
         var box_renderer = slicePlane.Find("CollidingBBox").GetComponent<MeshRenderer>();
         box_renderer.material.SetColor("_Color", mPlaneColor);
+        //box_renderer.material.EnableKeyword("DEBUG");
         mBBoxRenderer.Add(box_renderer);
         mTargetObjs.Add(planeRoot);
         mHandGrabInteractableObjs.Add(planeRoot.Find("HandGrabInteractable").gameObject);
         mIsVisibles.Add(true);
 
-        AddOptionToTargetDropDown("SlicingPlane " + (++mTotalId));
+        AddOptionToTargetDropDown("SlicingPlane " + mTotalId);
         DropdownValueChanged(mIsVisibles.Count);
 
-        var preview_plane = GameObject.Instantiate(Resources.Load<GameObject>("Prefabs/SlicingPlanePreview")).GetComponent<RectTransform>();
+        var previewRoot = GameObject.Instantiate(Resources.Load<GameObject>("Prefabs/SlicingPlanePreview"));
+        var preview_plane = previewRoot.GetComponent<RectTransform>();
         preview_plane.parent = PreviewContentParent;
 
         preview_plane.localRotation = Quaternion.identity;
@@ -126,6 +159,16 @@ public class SlicingEdit : BasicMutipleTargetUI
             mSliceVisibilities.Add(mPreviewSlices[scount - 2].anchoredPosition.x + mScrollContentRect.anchoredPosition.x < mScrollWidth - mContentWidth * 2 - mSpacing);
         else
             mSliceVisibilities.Add(mScrollContentRect.anchoredPosition.x>(-mContentWidth));
+       
+        previewRoot.transform.Find("ProjNeedlePlane").GetComponent<Image>().material.mainTexture = planeRoot.GetComponent<SingleSlicingPlane>().GetRenderTexture();
+
+        if (mTargetNeedle)
+        {
+            planeRoot.GetComponent<SingleSlicingPlane>().onEnableNeedleProject(mTargetNeedle.NeedleTipTransform, mTargetNeedle.NeedleEndTransform);
+
+
+            //previewRoot.GetComponent<SingleSlicingPlane>().onEnableNeedleProject(mTargetNeedle.NeedleTipTransform, mTargetNeedle.NeedleEndTransform);
+        }
     }
     public void OnRemoveSlicingPlane()
     {
@@ -218,6 +261,11 @@ public class SlicingEdit : BasicMutipleTargetUI
         if (mTargetId < 0) return;
         base.OnChangeVisibilityStatus();
         mPreviewSlices[mTargetId].gameObject.SetActive(mIsVisibles[mTargetId]);
+        if (mTargetNeedle && mIsVisibles[mTargetId])
+        {
+           mTargetObjs[mTargetId].GetComponent<SingleSlicingPlane>().onEnableNeedleProject(mTargetNeedle.NeedleTipTransform, mTargetNeedle.NeedleEndTransform);
+           //mPreviewSlices[mTargetId].GetComponent<SingleSlicingPlane>().onEnableNeedleProject(mTargetNeedle.NeedleTipTransform, mTargetNeedle.NeedleEndTransform);
+        }
     }
 
     private void Update()

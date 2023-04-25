@@ -8,10 +8,10 @@ public class RayInteractableHandler : MonoBehaviour
 {
     //public VolumeDataEdit VolumeManager;
     //public RayInteractorCursorVisual RightControllerCursor;
-    [SerializeField]
-    private Transform RightFingerTip;
-    [SerializeField]
-    private Transform RightHandControllerFingerTip;
+    //[SerializeField]
+    //private Transform RightFingerTip;
+    //[SerializeField]
+    //private Transform RightHandControllerFingerTip;
     //public Transform LeftFingerTip;
     //public Transform LeftHandControllerFingerTip;
 
@@ -37,8 +37,6 @@ public class RayInteractableHandler : MonoBehaviour
     protected Vector2 mCursorPosInCanvas;
 
     public static bool TFDirty = false;
-    private bool mUseHand = false;
-
     private int mTotalHandlerNum = 0;
     private void ChangeHighlightHandle(int index, bool highlight)
     {
@@ -125,7 +123,7 @@ public class RayInteractableHandler : MonoBehaviour
         mInnerScaleInv = new Vector2(1.0f / mMeshTransform.lossyScale.x, 1.0f/ mMeshTransform.lossyScale.y);
         mInnerSizeInv = new Vector2(1.0f / mInnerSize.x, 1.0f / mInnerSize.y);
 
-        mUseHand = RightFingerTip.gameObject.activeInHierarchy;
+        //mUseHand = RightFingerTip.gameObject.activeInHierarchy;
     }
     private void Start()
     {
@@ -147,7 +145,8 @@ public class RayInteractableHandler : MonoBehaviour
     private Vector2 GetCursorPos()
     {
         // Convert cursor position to local space of the mesh
-        Vector3 cursorInMesh = mMeshTransform.InverseTransformPoint(mUseHand?RightFingerTip.position:RightHandControllerFingerTip.position);
+        //Vector3 cursorInMesh = mMeshTransform.InverseTransformPoint(CylinderUI.UseHand?RightFingerTip.position:RightHandControllerFingerTip.position);
+        Vector3 cursorInMesh = mMeshTransform.InverseTransformPoint(PlayerInteractionManager.PlayerOPTip.position);
         cursorInMesh.z = .0f;
         if (!mMesh)
             mMesh = mMeshTransform.GetComponent<MeshFilter>().mesh;

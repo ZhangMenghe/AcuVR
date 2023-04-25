@@ -93,6 +93,7 @@ Shader "VolumeRendering/DirectVolumeRenderingShader"
             //float4x4 _CrossSectionMatrix;
             int _CrossSectionNum;
             float4x4 _CrossSectionMatrices[5];
+            float _CrossSectionInBounds[5];
 //#endif
 
             struct RayInfo
@@ -351,11 +352,13 @@ Shader "VolumeRendering/DirectVolumeRenderingShader"
             {
                 float3 pos = currPos - float3(0.5f, 0.5f, 0.5f);
                 for (int i = 0; i < _CrossSectionNum; i++) {
+                    if (_CrossSectionInBounds[i] < .0f) continue;
                     // Convert from model space to plane's vector space
                     float3 planeSpacePos = mul(_CrossSectionMatrices[i], float4(pos, 1.0f));
 
 #if CUTOUT_PLANE
                     if (planeSpacePos.z > 0.0f) return true;
+
 #elif CUTOUT_BOX_INCL
                     if (!(planeSpacePos.x >= -0.5f && planeSpacePos.x <= 0.5f && planeSpacePos.y >= -0.5f && planeSpacePos.y <= 0.5f && planeSpacePos.z >= -0.5f && planeSpacePos.z <= 0.5f)) return true;
 #elif CUTOUT_BOX_EXCL

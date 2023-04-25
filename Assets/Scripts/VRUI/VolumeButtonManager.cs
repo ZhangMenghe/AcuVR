@@ -8,11 +8,6 @@ public class VolumeButtonManager : BasicSingleObjectButtonGroupManager
         INITIAL_LOCK = false;
         OnAwake();
     }
-    private void Start()
-    {
-        Vector3 sz = TargetObject.transform.localScale;
-        transform.localPosition = new Vector3(-sz.x * 0.5f, sz.x * 0.5f, -sz.y * 0.5f);
-    }
     protected override void OnReset()
     {
         base.OnReset();

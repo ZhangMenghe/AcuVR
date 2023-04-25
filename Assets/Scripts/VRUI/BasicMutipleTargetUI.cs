@@ -63,11 +63,11 @@ public class BasicMutipleTargetUI : MonoBehaviour
     protected virtual void OnRemoveTarget()
     {
         if (!mIsVisibles[mTargetId]) VRUICommonUtils.SwapSprite(ref VisibilityBtn);
+        
         mIsVisibles.RemoveAt(mTargetId);
         mHandGrabInteractableObjs.RemoveAt(mTargetId);
         mTargetObjs.RemoveAt(mTargetId);
         mBBoxRenderer.RemoveAt(mTargetId);
-
 
         TargetDropDown.options.RemoveAt(mTargetId + 1);
         mTargetId = -1;
@@ -88,12 +88,15 @@ public class BasicMutipleTargetUI : MonoBehaviour
         {
             mBBoxRenderer[mTargetId].material.SetColor("_Color", mPlaneColorInactive);
             mHandGrabInteractableObjs[mTargetId].SetActive(false);
+            //mTargetObjs[mTargetId].gameObject.SetActive(false);
         }
         //enable the new one
         if (value >= 0)
         {
             mBBoxRenderer[value].material.SetColor("_Color", mPlaneColor);
             mHandGrabInteractableObjs[value].SetActive(true);
+            //mTargetObjs[value].gameObject.SetActive(true);
+
         }
     }
 

@@ -74,7 +74,7 @@ Shader "Oculus/Interaction/UIStyle"
                     o.normal = UnityObjectToWorldNormal(v.normal);
                     half pulse = sin(_Time.z) * 0.5 + 0.5;
 					float4 vertexPos = UnityObjectToClipPos(v.vertex);
-                    vertexPos.xyz = vertexPos + ((0.002 * pulse) * o.normal * v.vertexColor.a);
+                    vertexPos.xyz = vertexPos + ((0.0002 * pulse) * o.normal * v.vertexColor.a);
                     o.vertex = vertexPos;
                     o.vertexColor = v.vertexColor;
                     o.worldPos = mul(unity_ObjectToWorld, v.vertex).xyz;
@@ -93,7 +93,7 @@ Shader "Oculus/Interaction/UIStyle"
 
 					half opacity =  fresnel * i.vertexColor.a;
 
-					half4 debug = half4(i.vertexColor.a, i.vertexColor.a, i.vertexColor.a, 1.0);
+					//half4 debug = half4(i.vertexColor.a, i.vertexColor.a, i.vertexColor.a, 1.0);
 
 					half4 finalColor = _Color * i.vertexColor;
                     return half4(finalColor.rgb, opacity);

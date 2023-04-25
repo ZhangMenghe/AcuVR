@@ -30,9 +30,6 @@ namespace UnityVolumeRendering
             mDataTex = data_tex; mTFTex = tf_tex;
 
             meshRenderer = transform.GetComponent<MeshRenderer>();
-            //sliceMeshRend.material = new Material(sliceMeshRend.sharedMaterial);
-
-            //Material sliceMat = transform.GetComponent<MeshRenderer>().sharedMaterial;
             meshRenderer.material.SetTexture("_DataTex", data_tex);
             meshRenderer.material.SetTexture("_TFTex", tf_tex);
 
@@ -50,7 +47,7 @@ namespace UnityVolumeRendering
                 mParentTransform ? mParentTransform.lossyScale : transform.lossyScale);
             meshRenderer.material.EnableKeyword("OVERRIDE_MODEL_MAT");
             meshRenderer.material.SetMatrix("_planeMat", plane_mat);
-            meshRenderer.material.SetMatrix("_planeModelMat", plane_mat*Matrix4x4.Scale(transform.localScale));
+            meshRenderer.material.SetMatrix("_planeModelMat", plane_mat * Matrix4x4.Scale(transform.localScale));
         }
     }
 }

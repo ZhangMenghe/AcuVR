@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using System.Collections.Generic;
 public class StandardModelMenu
 {
     enum StandardModelLayers
@@ -19,19 +20,17 @@ public class StandardModelMenu
         "Skin", "Muscular", "Circulatory", "Digestive",
         "Eye", "Lymphatic", "Nervous", "Respiratory", "Skeletal"
     };
-    //[HideInInspector]
-    //public bool[] mVisibles;
     private Transform mHeadRoot;
+    private Dictionary<string, bool> mVisibilities = new Dictionary<string, bool>();
 
+    private List<Button> mLayerButtons = new List<Button>();
     public void Initialized(in Transform OrganMenu, in Transform HeadRoot)
     {
         mHeadRoot = HeadRoot;
-        //mVisibles = new bool[(int)StandardModelLayers.LAYER_END];
         
         GameObject template = OrganMenu.Find("template").gameObject;
         for(int i=0; i< (int)StandardModelLayers.LAYER_END; i++)
         {
-            //mVisibles[i] = true;
             GameObject layer = GameObject.Instantiate(template);
             layer.transform.parent = OrganMenu;
 
@@ -47,10 +46,26 @@ public class StandardModelMenu
             var button = layer.GetComponentInChildren<Button>();
             button.onClick.AddListener(delegate {
                 VRUICommonUtils.SwapSprite(ref button);
-                var target_obj = mHeadRoot.Find(layer.name).gameObject;
-                target_obj.SetActive(!target_obj.activeSelf);
-                //mHeadRoot.Find(layer.name).gameObject.SetActive(mVisibles[i]);
+                //var target_obj = mHeadRoot.Find(layer.name).gameObject;
+                //target_obj.SetActive(!target_obj.activeSelf);
+                mVisibilities[layer.name] = !mVisibilities[layer.name];
+                mHeadRoot.Find(layer.name).gameObject.SetActive(mVisibilities[layer.name]);
             });
+            mLayerButtons.Add(button);
+            mVisibilities.Add(mLayerNames[i], true);
+        }
+    }
+    public void onReset()
+    {
+        for (int i = 0; i < (int)StandardModelLayers.LAYER_END; i++)
+        {
+            if (!mVisibilities[mLayerNames[i]])
+            {
+                var button = mLayerButtons[i];
+                VRUICommonUtils.SwapSprite(ref button);
+                mHeadRoot.Find(mLayerNames[i]).gameObject.SetActive(true);
+                mVisibilities[mLayerNames[i]] = true;
+            }
         }
     }
 }

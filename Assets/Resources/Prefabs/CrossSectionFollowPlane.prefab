@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 7621817265638011433}
   - component: {fileID: 4756273696276402491}
   m_Layer: 0
-  m_Name: CrossSectionPlane
+  m_Name: CrossSectionFollowPlane
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -61,7 +61,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: e6d39b045f6efbe479ebad815837cf77, type: 2}
+  - {fileID: 2100000, guid: 264a731f303386347ba868645c4fd8a4, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0

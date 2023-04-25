@@ -8,18 +8,28 @@ public class BasicSingleObjectButtonGroupManager : MonoBehaviour
     public GameObject HandGrabInteractableObject;
     public Oculus.Interaction.RayInteractable rayInteractable;
 
+    public Button MoreBtn;
     public Button LockBtn;
     public Button VisibleBtn;
     public Button ResetBtn;
+
+    [SerializeField]
+    private GameObject ControlBtnGroup;
 
     protected bool INITIAL_VISIBLE;
     protected bool INITIAL_LOCK;
 
     protected bool mIsVisible;
     protected bool mLock;
+    protected bool mIsControlBtnGroupOn;
 
     protected void OnAwake()
     {
+        if (MoreBtn)
+            MoreBtn.onClick.AddListener(delegate {
+                OnChangeMoreStatus();
+            });
+
         if (LockBtn)
         LockBtn.onClick.AddListener(delegate {
             OnChangeLockStatus();
@@ -35,6 +45,7 @@ public class BasicSingleObjectButtonGroupManager : MonoBehaviour
 
         mLock = INITIAL_LOCK;
         mIsVisible = INITIAL_VISIBLE;
+        mIsControlBtnGroupOn = true;
     }
     protected virtual void OnReset()
     {
@@ -56,5 +67,11 @@ public class BasicSingleObjectButtonGroupManager : MonoBehaviour
 
         mLock = !mLock;
         VRUICommonUtils.SwapSprite(ref LockBtn);
+    }
+    protected virtual void OnChangeMoreStatus()
+    {
+        mIsControlBtnGroupOn = !mIsControlBtnGroupOn;
+        ControlBtnGroup.SetActive(mIsControlBtnGroupOn);
+        //VRUICommonUtils.SwapSprite(ref MoreBtn);
     }
 }

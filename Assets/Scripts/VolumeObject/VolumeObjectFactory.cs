@@ -9,9 +9,24 @@ public class VolumeObjectFactory
 
     public static readonly Vector3 DEFAULT_VOLUME_POSITION = new Vector3(.0f, 1.5f, .3f);
     private static readonly Quaternion DEFAULT_VOLUME_ROTATION = Quaternion.Euler(-90.0f, 0.0f, 180.0f);
+    private static CylinderUI mMainUI;
+
     public static void OnWorkingTableChange(bool isOn) {
         ResetTargetVolume();
         GetVolumeTargetObject().gameObject.GetComponent<Rigidbody>().isKinematic = !isOn;
+    }
+    public static void OnTargetNeedleChange(int id, in GrabbaleAcuNeedle targetNeedle)
+    {
+        if (id < 0) mMainUI.SlicingPanel.GetComponent<SlicingEdit>().DisableNeeldeProjection();
+
+        else
+        {
+            mMainUI.SlicingPanel.GetComponent<SlicingEdit>().EnableNeedleProjection(targetNeedle);
+        }
+    }
+    public static void SetUIManager(in CylinderUI mainUI)
+    {
+        mMainUI = mainUI;
     }
     public static void GatherObjectsInScene()
     {
@@ -26,6 +41,7 @@ public class VolumeObjectFactory
         gTargetVolume.transform.parent.position = DEFAULT_VOLUME_POSITION;
         gTargetVolume.onReset();
     }
+
     public static Transform GetVolumeTargetObject()
     {
         return gTargetVolume.transform.parent.parent;

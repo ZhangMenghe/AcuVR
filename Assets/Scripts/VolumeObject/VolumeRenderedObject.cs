@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 namespace UnityVolumeRendering
@@ -64,20 +65,115 @@ namespace UnityVolumeRendering
         private HelmVolumeParam helm_params = new HelmVolumeParam();
 
         public static readonly int MAX_CS_PLANE_NUM = 5;
-        private Matrix4x4[] m_cs_plane_matrices = new Matrix4x4[MAX_CS_PLANE_NUM];
+
+        private List<Matrix4x4> mCSPlaneMatrices = new List<Matrix4x4>();
+        private List<float> mCSPlaneInBounds = new List<float>();
+        private Matrix4x4[] mCSPlaneMatriceArray = new Matrix4x4[MAX_CS_PLANE_NUM];
+        private float[] mCSPlaneInBoundArray = new float[MAX_CS_PLANE_NUM];
 
         private float m_unified_scale = 1.0f;
         private Vector3 m_real_scale;
 
+        [HideInInspector]
         public List<Transform> m_cs_planes { get; set; } = new List<Transform>();
+        private List<bool> mCSPlanesActive = new List<bool>();
+        private int mCSUpdatingId = -1, mCSUpdatingMatrixId = -1;
+        [HideInInspector]
         public List<Transform> SlicingPlaneList { get; set; } = new List<Transform>();
-
         public static bool isSnapAble = true;
 
+        private BoxCollider mVolumeCollider;
+        
         public void onReset()
         {
             SetVolumeUnifiedScale(1.0f);
         }
+        private void UpdateCrossSectionMatrics()
+        {
+            if (mCSPlaneMatrices.Count == 0)
+                meshRenderer.sharedMaterial.DisableKeyword("CUTOUT_PLANE");
+            else
+            {
+                meshRenderer.sharedMaterial.EnableKeyword("CUTOUT_PLANE");
+                meshRenderer.sharedMaterial.SetInteger("_CrossSectionNum", mCSPlaneMatrices.Count);
+
+                for(int i=0; i<mCSPlaneMatrices.Count; i++)
+                {
+                    mCSPlaneMatriceArray[i] = mCSPlaneMatrices[i];
+                    mCSPlaneInBoundArray[i] = mCSPlaneInBounds[i];
+                }
+
+                meshRenderer.sharedMaterial.SetMatrixArray("_CrossSectionMatrices", mCSPlaneMatriceArray);
+                meshRenderer.sharedMaterial.SetFloatArray("_CrossSectionInBounds", mCSPlaneInBoundArray);
+            }
+
+        }
+        public void AddCrossSectionPlane(in Transform planeMesh)
+        {
+            m_cs_planes.Add(planeMesh);
+            mCSPlanesActive.Add(true);
+            mCSPlaneInBounds.Add(1.0f);
+            mCSPlaneMatrices.Add(planeMesh.worldToLocalMatrix * transform.localToWorldMatrix);
+
+            UpdateCrossSectionMatrics();
+        }
+        public void RemoveCrossSectionPlaneAt(int targetId)
+        {
+            if (targetId<0 || targetId >= m_cs_planes.Count) return;
+
+            if (mCSPlanesActive[targetId])
+            {
+                int matrixIdx = mCSPlanesActive.Take(targetId).Count(b => b);
+                mCSPlaneMatrices.RemoveAt(matrixIdx);
+                mCSPlaneInBounds.RemoveAt(matrixIdx);
+            }
+
+            m_cs_planes.RemoveAt(targetId);
+            mCSPlanesActive.RemoveAt(targetId);
+
+            UpdateCrossSectionMatrics();
+
+            //update m_cs_plane_matrices
+            //int active_count = 0;
+            //for (int i = 0; i <mCSPlanesActive.Count; i++)
+            //{
+            //    if(mCSPlanesActive[i]) m_cs_plane_matrices[active_count++] = m_cs_planes[i].worldToLocalMatrix * transform.localToWorldMatrix;
+            //}
+            //if(active_count == 0)
+            //{
+            //    meshRenderer.sharedMaterial.DisableKeyword("CUTOUT_PLANE");
+            //}
+            //else
+            //{
+            //    meshRenderer.sharedMaterial.EnableKeyword("CUTOUT_PLANE");
+            //    meshRenderer.sharedMaterial.SetInteger("_CrossSectionNum", active_count);
+            //    meshRenderer.sharedMaterial.SetMatrixArray("_CrossSectionMatrices", m_cs_plane_matrices);
+            //}
+        }
+
+        public void ChangeCrossSectionPlaneActiveness(int targetId, bool isVisible)
+        {
+            if (targetId < 0 || targetId >= mCSPlanesActive.Count || isVisible == mCSPlanesActive[targetId]) return;
+
+            
+            int matrixIdx = mCSPlanesActive.Take(targetId).Count(b => b);
+            if (isVisible)
+            {
+                bool inbound = mVolumeCollider.bounds.Intersects(m_cs_planes[targetId].GetComponent<BoxCollider>().bounds);
+
+                mCSPlaneMatrices.Insert(matrixIdx, m_cs_planes[targetId].worldToLocalMatrix * transform.localToWorldMatrix);
+                mCSPlaneInBounds.Insert(matrixIdx, inbound?1.0f:-1.0f);
+            }
+            else
+            {
+                mCSPlaneMatrices.RemoveAt(matrixIdx);
+                mCSPlaneInBounds.RemoveAt(matrixIdx);
+            }
+            mCSPlanesActive[targetId] = isVisible;
+            UpdateCrossSectionMatrics();
+        }
+        
+        /********OLD FUNCTIONS***********/
         public Transform CreateCrossSectionPlane()
         {
             Transform cross_plane;
@@ -108,15 +204,7 @@ namespace UnityVolumeRendering
             meshRenderer.sharedMaterial.EnableKeyword("CUTOUT_PLANE");
             return cross_plane;
         }
-        public void DeleteCrossSectionPlaneAt(int TargetId)
-        {
-            if (TargetId < m_cs_planes.Count)
-            {
-                Destroy(isSnapAble? m_cs_planes[TargetId].parent.parent.gameObject:
-                    m_cs_planes[TargetId].gameObject);
-                m_cs_planes.RemoveAt(TargetId);
-            }
-        }
+
         private void check_slicing_planes() {
             for (int i = SlicingPlaneList.Count - 1; i >= 0; i--)
             {
@@ -136,7 +224,7 @@ namespace UnityVolumeRendering
             SlicingPlane slicing_plane;
             if (isSnapAble)
             {
-                slicePlaneObj = GameObject.Instantiate(Resources.Load<GameObject>("Prefabs/AAASnapSlicingPlaneBounded")).transform;
+                slicePlaneObj = GameObject.Instantiate(Resources.Load<GameObject>("Prefabs/AAASnapSlicingPlane")).transform;
 
                 slicePlaneObj.name = "SLPlane" + SlicingPlaneList.Count;
                 slicePlaneObj.parent = transform;
@@ -453,38 +541,36 @@ namespace UnityVolumeRendering
 
         private void Start()
         {
+            mVolumeCollider = GetComponentInChildren<BoxCollider>();
             UpdateMaterialProperties();
         }
 
         private void Update()
-        {
-            //MENGHE! ONLY FOR DEBUG!!!!
-            DisplayRackFactory.RenderFrames();
-            //MENGHE: DO NOT CHECK EVERYTIME
-            //bool need_update = false;
-            //for(int i=m_cs_planes.Count-1; i>=0; i--) { 
-            //    if (m_cs_planes[i] == null) { m_cs_planes.Remove(m_cs_planes[i]); continue; }
-            //    if (m_cs_planes[i].hasChanged) { need_update = true;}
-            //}
-            if (m_cs_planes.Count == 0) 
-                meshRenderer.sharedMaterial.DisableKeyword("CUTOUT_PLANE");
-            else
+        { 
+            if(mCSUpdatingId >= 0)
             {
-                int plane_count = Mathf.Min(m_cs_planes.Count, MAX_CS_PLANE_NUM);
-                int active_count = plane_count;
-                for (int i = 0, activeId=0; i < plane_count; i++)
-                {
-                    if (!m_cs_planes[i].gameObject.activeInHierarchy){
-                        active_count--; continue; 
-                    }
+                bool inBound = mVolumeCollider.bounds.Intersects(m_cs_planes[mCSUpdatingId].GetComponent<BoxCollider>().bounds);
 
-                    m_cs_plane_matrices[activeId++] = m_cs_planes[i].worldToLocalMatrix * transform.localToWorldMatrix;
+                mCSPlaneInBounds[mCSUpdatingMatrixId] = inBound ? 1.0f:-1.0f;
+                mCSPlaneInBoundArray[mCSUpdatingMatrixId] = mCSPlaneInBounds[mCSUpdatingMatrixId];
+
+                if (inBound)
+                {
+                    mCSPlaneMatrices[mCSUpdatingMatrixId] = m_cs_planes[mCSUpdatingId].worldToLocalMatrix * transform.localToWorldMatrix;
+
+                    mCSPlaneMatriceArray[mCSUpdatingMatrixId] = mCSPlaneMatrices[mCSUpdatingMatrixId];
+                    meshRenderer.sharedMaterial.SetMatrixArray("_CrossSectionMatrices", mCSPlaneMatriceArray);
+
                 }
-                
-                meshRenderer.sharedMaterial.EnableKeyword("CUTOUT_PLANE");
-                meshRenderer.sharedMaterial.SetInteger("_CrossSectionNum", active_count);
-                meshRenderer.sharedMaterial.SetMatrixArray("_CrossSectionMatrices", m_cs_plane_matrices);
+                meshRenderer.sharedMaterial.SetFloatArray("_CrossSectionInBounds", mCSPlaneInBoundArray);
             }
+        }
+
+            public void UpdateCrossSectionPlane(string targetName, bool updating)
+        {
+            if (!updating) { mCSUpdatingId = -1; return; }
+            mCSUpdatingId = m_cs_planes.FindIndex(a => a.name == targetName);
+            mCSUpdatingMatrixId = mCSPlanesActive.Take(mCSUpdatingId + 1).Count(b => b) - 1;
         }
         private void LateUpdate()
         {

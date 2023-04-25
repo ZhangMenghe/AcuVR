@@ -9,8 +9,9 @@ public class CrossSectionEdit : BasicMutipleTargetUI
     private readonly bool mTargetOnNewPlane = true;
     private void Awake()
     {
-        mPlaneColor = new Color(1.0f, 0.6f, .0f);
-        mPlaneColorInactive = new Color(0.7f, 0.4f, 0.15f);
+        mPlaneColor = new Color(1.0f, 0.6f, .0f, 1.0f);
+        //mPlaneColorInactive = new Color(0.7f, 0.4f, 0.15f);
+        mPlaneColorInactive = new Color(0.9f, 0.9f, 0.9f,0.01f);
     }
     private void Start()
     {
@@ -59,18 +60,32 @@ public class CrossSectionEdit : BasicMutipleTargetUI
     {
         if (!VolumeObjectFactory.gTargetVolume || mIsVisibles.Count > VolumeRenderedObject.MAX_CS_PLANE_NUM) return;
 
-        Transform planeRoot = VolumeObjectFactory.gTargetVolume.CreateCrossSectionPlane();
-        var box_renderer = VolumeObjectFactory.gTargetVolume.m_cs_planes[mIsVisibles.Count].GetComponent<MeshRenderer>();
-        box_renderer.material.SetColor("_Color", mPlaneColor);
-        mBBoxRenderer.Add(box_renderer);
+        Transform planeRoot = GameObject.Instantiate((GameObject)Resources.Load("Prefabs/AAASnapCrossSectionPlane")).transform;
+        planeRoot.name = "CSPlane" + (++mTotalId);
+        planeRoot.parent = VolumeObjectFactory.gTargetVolume.transform;
+        planeRoot.localRotation = Quaternion.identity;
+        planeRoot.localPosition = Vector3.zero;
+        planeRoot.localScale = Vector3.one;
+
+        if (Vector3.Dot(planeRoot.forward, Camera.main.transform.forward) > .0f)
+        {
+            planeRoot.localRotation = Quaternion.Euler(.0f, .0f, 180.0f);
+        }
+        planeRoot.GetComponent<CrossSectionPlane>().Initialized(mTotalId);
+
+        var mesh_renderer = planeRoot.GetComponentInChildren<MeshRenderer>();
+        mesh_renderer.material.SetColor("_Color", mPlaneColor);
+        mesh_renderer.name = planeRoot.name;
+        mBBoxRenderer.Add(mesh_renderer);
 
         mTargetObjs.Add(planeRoot);
         mHandGrabInteractableObjs.Add(planeRoot.Find("HandGrabInteractable").gameObject);
         mIsVisibles.Add(true);
 
-        AddOptionToTargetDropDown("CSPlane " + (++mTotalId), mTargetOnNewPlane);
+        AddOptionToTargetDropDown(planeRoot.name, mTargetOnNewPlane);
         DropdownValueChanged(mIsVisibles.Count);
 
+        VolumeObjectFactory.gTargetVolume.AddCrossSectionPlane(mesh_renderer.transform);
         StandardModelFactory.AddCrossSectionPlane(planeRoot.gameObject, mTargetOnNewPlane);
 
 
@@ -79,7 +94,9 @@ public class CrossSectionEdit : BasicMutipleTargetUI
     public void OnRemoveCrossSectionPlane()
     {
         if (!VolumeObjectFactory.gTargetVolume || mTargetId < 0) return;
-        VolumeObjectFactory.gTargetVolume.DeleteCrossSectionPlaneAt(mTargetId);
+        Destroy(mTargetObjs[mTargetId].gameObject);
+        //VolumeObjectFactory.gTargetVolume.DeleteCrossSectionPlaneAt(mTargetId);
+        VolumeObjectFactory.gTargetVolume.RemoveCrossSectionPlaneAt(mTargetId);
         StandardModelFactory.DeleteCrossSectionPlaneAt(mTargetId);
         OnRemoveTarget();
     }
@@ -88,7 +105,10 @@ public class CrossSectionEdit : BasicMutipleTargetUI
     }
     protected override void OnChangeVisibilityStatus()
     {
+        if (mTargetId < 0) return;
+
         base.OnChangeVisibilityStatus();
+        VolumeObjectFactory.gTargetVolume.ChangeCrossSectionPlaneActiveness(mTargetId, mIsVisibles[mTargetId]);
         StandardModelFactory.OnChangeVisibility(mTargetId, mIsVisibles[mTargetId]);
     }
 

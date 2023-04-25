@@ -16,7 +16,6 @@ public class StandardModel : MonoBehaviour
     protected List<bool> mCrossPlaneVisibles = new List<bool>();
         
     private readonly int MAX_CROSS_PLANES = 5;
-
     private HeadLocator mRefVolumeLocator;
 
     private int mTargetCrossPlane = -1;
@@ -31,7 +30,6 @@ public class StandardModel : MonoBehaviour
 
     private void Awake()
     {
-        //mRootTransform = TargetObjectRoot.parent;
         mNaiveNeedleObj = GameObject.Instantiate(Resources.Load<GameObject>("Prefabs/AcuNeedleNaive"));
         mNaiveNeedleObj.SetActive(false);
         LocatorRoot.CreateVirtualMidObjs();
@@ -40,11 +38,7 @@ public class StandardModel : MonoBehaviour
     {
         meshRenderers = GetComponentsInChildren<MeshRenderer>(false);
     }
-    //public void OnReset()
-    //{
-    //    //UnLinkVolume();
-    //}
-    //transform that contains VRO
+
     public void LinkVolume(in Transform volume, float unified_scale)
     {
         mRefVolumeLocator = volume.parent.GetComponentInChildren<HeadLocator>(true);
@@ -70,6 +64,18 @@ public class StandardModel : MonoBehaviour
         TargetObjectRoot.localScale = Vector3.one;
         mIsLinked = false;
         //LocatorRoot.ResetScale();
+
+        //remove all the cross-section planes
+        foreach(var plane in mCrossPlanes)
+        {
+            Destroy(plane.parent.gameObject);
+        }
+        mCrossPlanes.Clear();
+        mCrossPlaneVisibles.Clear();
+        foreach (MeshRenderer meshRenderer in meshRenderers)
+            meshRenderer.material.SetInteger("_CrossSectionNum", 0);
+        mTargetCrossPlane = -1;
+        mRefCrossPlane = null;
     }
 
     public void SyncCrossSectionPlanes(in CrossSectionEdit CrossSectionManager)
@@ -108,12 +114,11 @@ public class StandardModel : MonoBehaviour
         planeRoot.localRotation = Quaternion.identity;
         planeRoot.localScale = Vector3.one * 0.3f;
 
-
-        Transform cross_plane = GameObject.Instantiate((GameObject)Resources.Load("Prefabs/CrossSectionPlane")).transform;
+        Transform cross_plane = GameObject.Instantiate((GameObject)Resources.Load("Prefabs/CrossSectionFollowPlane")).transform;
         cross_plane.parent = planeRoot;
         cross_plane.localRotation = Quaternion.Euler(90.0f, 0.0f, 0.0f);
         cross_plane.localPosition = Vector3.zero;
-        cross_plane.localScale = Vector3.one * 1.3f;
+        cross_plane.localScale = Vector3.one * 1.2f;
 
         mCrossPlanes.Add(cross_plane);
         mCrossPlaneVisibles.Add(true);

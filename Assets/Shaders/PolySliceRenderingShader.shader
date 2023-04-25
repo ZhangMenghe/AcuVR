@@ -13,6 +13,7 @@ Shader "VolumeRendering/PolySliceRenderingShader"
         Tags { "Queue" = "Transparent" }
         LOD 100
         Blend SrcAlpha OneMinusSrcAlpha
+        Cull Off
         Pass
         {
             CGPROGRAM
@@ -66,8 +67,7 @@ Shader "VolumeRendering/PolySliceRenderingShader"
                 float3 vert = mul(_planeMat, float4(0.5f - v.uv.x, 0.0f, 0.5f - v.uv.y, 1.0f));
                 o.relVert = mul(_parentInverseMat, float4(vert, 1.0f));
                 o.uv = v.uv;
-
-                clip(o.vertex, _ClipRect, o.vertex); // Call the clip function
+                //clip(o.vertex, _ClipRect, o.vertex); // Call the clip function
 
                 return o;
             }
@@ -82,8 +82,6 @@ Shader "VolumeRendering/PolySliceRenderingShader"
                 {
                    return float4(0.0f, 0.0f, 0.0f, 1.0f);
                 }
-                //return float4(1.0f, .0f, .0f, 1.0f);
-                // Sample the volume texture.
                 float dataVal = tex3D(_DataTex, dataCoord);
                 float4 col = tex2D(_TFTex, float2(dataVal, 0.0f));
                 col.a = 1.0f;

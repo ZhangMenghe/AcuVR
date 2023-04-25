@@ -4,16 +4,19 @@ using UnityEngine;
 
 public class CrossSectionPlane : MonoBehaviour
 {
-    public Transform CrossPlaneMesh;
-
-    void Start()
+    public TMPro.TMP_Text idText;
+    public void Initialized(int id)
     {
-        
+
+        idText.SetText(id.ToString());
+    }
+    public void OnPlaneSelect()
+    {
+        VolumeObjectFactory.gTargetVolume.UpdateCrossSectionPlane(name, true);
+    }
+    public void OnPlaneReleased()
+    {
+        VolumeObjectFactory.gTargetVolume.UpdateCrossSectionPlane(name, false);
     }
 
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
 }

@@ -20,6 +20,8 @@
             #pragma fragment frag
             // make fog work
             #pragma multi_compile_fog
+            
+            #pragma multi_compile __ DEBUG
 
             #include "UnityCG.cginc"
 
@@ -49,8 +51,11 @@
                 return o;
             }
 
-            float4 frag (v2f i) : SV_Target
+            float4 frag(v2f i) : SV_Target
             {
+#ifdef DEBUG
+                return _Color;
+#endif
                 // sample the texture
                 float4 col = tex2D(_MainTex, i.uv);
                 if (col.a > .0f) return _Color;

@@ -1,6 +1,6 @@
-using System;
 using System.Linq;
 using UnityEngine;
+
 public class CylinderUI : MonoBehaviour
 {
     enum CylinderPanels
@@ -9,7 +9,7 @@ public class CylinderUI : MonoBehaviour
         VOLUME_PROPOERTIES_PANEL = 0,
         TRANSFER_FUNCTION_PANEL,
         SLICING_PANEL,
-        CROSS_SECTION_PANEL,
+        //CROSS_SECTION_PANEL,
         NEEDLING_PANEL,
         WORKING_TABLE_PANEL,
         //DRAW_PANEL,
@@ -19,17 +19,21 @@ public class CylinderUI : MonoBehaviour
     public Transform VolumePropoertiesPanel;
     public Transform TransferFunctionPanel;
     public Transform SlicingPanel;
-    public Transform CrossSectionPanel;
+    //public Transform CrossSectionPanel;
     public Transform NeedlingPanel;
-    public Transform WorkingTable;
+    //public Transform WorkingTable;
+
+    //[HideInInspector]
+    //public static bool UseHand = true;
     //public Transform DrawingPanel;
 
     private bool[] mIsPanelOn;
     private void Awake()
     {
+        VolumeObjectFactory.SetUIManager(this);
         VolumeObjectFactory.GatherObjectsInScene();
         mIsPanelOn = Enumerable.Repeat(false, (int)CylinderPanels.END_PANEL).ToArray();
-        StandardModelFactory.setCrossSectionManager(CrossSectionPanel.GetComponentInChildren<CrossSectionEdit>());
+        StandardModelFactory.setCrossSectionManager(SlicingPanel.GetComponentInChildren<CrossSectionEdit>());
     }
     private void change_panel_status(in GameObject obj, int pos)
     {
@@ -58,13 +62,13 @@ public class CylinderUI : MonoBehaviour
             TransferFunctionPanel.gameObject,
             (int)CylinderPanels.TRANSFER_FUNCTION_PANEL);
     }
-    public void OnChangeCrossSection()
-    {
-        if (!CrossSectionPanel) return;
-        change_panel_status(
-            CrossSectionPanel.gameObject,
-            (int)CylinderPanels.CROSS_SECTION_PANEL);
-    }
+    //public void OnChangeCrossSection()
+    //{
+    //    if (!CrossSectionPanel) return;
+    //    change_panel_status(
+    //        CrossSectionPanel.gameObject,
+    //        (int)CylinderPanels.CROSS_SECTION_PANEL);
+    //}
     public void OnChangeSliceRendering()
     {
         if (!SlicingPanel) return;
@@ -82,29 +86,5 @@ public class CylinderUI : MonoBehaviour
     public void OnChangeStandardModel()
     {
         StandardModelFactory.OnChangeStandardModelStatus();
-    }
-
-    public void OnChangeWorkingTable()
-    {
-        if (!WorkingTable) return;
-        change_panel_status(
-            WorkingTable.gameObject,
-            (int)CylinderPanels.WORKING_TABLE_PANEL);
-
-        VolumeObjectFactory.OnWorkingTableChange(mIsPanelOn[(int)CylinderPanels.WORKING_TABLE_PANEL]);
-        
-        //////MENGHE: GIVE OPTIONS TO WORK ON OTHER STUFF
-        //if (mIsPanelOn[(int)CylinderPanels.WORKING_TABLE_PANEL])
-        //    //{
-        //    //    GameObject content_obj = new GameObject("Contents");
-        //    //    content_obj.transform.parent = WorkingTable;
-        //    SlicingPanel.GetComponent<SlicingEdit>().OnEnableWorkingTableTarget(WorkingTable.Find("Contents"));
-        ////}
-        //else
-        //    //{
-        //    //    GameObject.Destroy(WorkingTable.Find("Contents").gameObject);
-        //    SlicingPanel.GetComponent<SlicingEdit>().OnDisableWorkingTableTarget();
-
-        ////}
     }
 }
