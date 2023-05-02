@@ -2,20 +2,27 @@ using UnityEngine;
 using UnityEngine.UI;
 public class StandardModelButtonManager : MonoBehaviour
 {
-    public StandardModel StandardModelData;
-    public GameObject HandGrabInteractableObject;
-    //public Oculus.Interaction.RayInteractable rayInteractable;
-
-    public Button MoreBtn;
-    public Button ShowListBtn;
-    public Button LockBtn;
-    public Button ResetBtn;
-    public Button LinkBtn;
-
+    [SerializeField]
+    private Transform RootTransform;
+    [SerializeField]
+    private StandardModel StandardModelData;
     [SerializeField]
     private GameObject ControlBtnGroup;
+    [SerializeField]
+    private GameObject HandGrabInteractableObject;
 
-    private GameObject mMainMenuObj;
+    [SerializeField]
+    private Button MoreBtn;
+    [SerializeField]
+    private Button ShowListBtn;
+    [SerializeField]
+    private Button LockBtn;
+    [SerializeField]
+    private Button ResetBtn;
+    [SerializeField]
+    private Button LinkBtn;
+    [SerializeField]
+    private GameObject OrganMenuObject;
 
     private bool mLock;
     private bool mIsLinked;
@@ -23,6 +30,8 @@ public class StandardModelButtonManager : MonoBehaviour
     private bool mIsControlBtnGroupOn;
 
     private StandardModelMenu mOrganMenu;
+
+    private bool mLastTimeControlForward;
     private void Awake()
     {
         ShowListBtn.onClick.AddListener(delegate {
@@ -50,18 +59,19 @@ public class StandardModelButtonManager : MonoBehaviour
         mIsLinked = false;
         mIsMenuOn = false;
         mIsControlBtnGroupOn = true;
-        StandardModelData.UnLinkVolume();
+        mLastTimeControlForward = true;
+        StandardModelData.OnReleaseLinkVolume();
 
-        mMainMenuObj = GameObject.Instantiate(Resources.Load<GameObject>("Prefabs/StandardModelUI"));
-        var StandardModelUI = mMainMenuObj.transform;
-        StandardModelUI.parent = transform;
-        StandardModelUI.localScale = Vector3.one;
-        StandardModelUI.localPosition = new Vector3(-0.3f, .0f, -0.15f);
-        StandardModelUI.localRotation = Quaternion.Euler(.0f, -30.0f, .0f);
+        //mMainMenuObj = GameObject.Instantiate(Resources.Load<GameObject>("Prefabs/StandardModelUI"));
+        //var StandardModelUI = mMainMenuObj.transform;
+        //StandardModelUI.parent = transform;
+        //StandardModelUI.localScale = Vector3.one;
+        //StandardModelUI.localPosition = new Vector3(-0.3f, .0f, -0.15f);
+        //StandardModelUI.localRotation = Quaternion.Euler(.0f, -30.0f, .0f);
 
         mOrganMenu = new StandardModelMenu();
-        mOrganMenu.Initialized(StandardModelUI.Find("OrganMenu"), StandardModelData.transform);
-        mMainMenuObj.SetActive(mIsMenuOn);
+        mOrganMenu.Initialized(OrganMenuObject.transform.Find("OrganMenu"), StandardModelData.transform);
+        OrganMenuObject.SetActive(mIsMenuOn);
     }
     private void OnReset()
     {
@@ -69,9 +79,9 @@ public class StandardModelButtonManager : MonoBehaviour
         if (mIsLinked) OnChangeLinkStatus();
        
         mOrganMenu.onReset();
-        mMainMenuObj.SetActive(false);
+        OrganMenuObject.SetActive(false);
         mIsMenuOn = false;
-
+        if (!mLastTimeControlForward) flipButtonPanel();
         StandardModelFactory.OnResetModel();
     }
     private void OnChangeLockStatus()
@@ -92,7 +102,7 @@ public class StandardModelButtonManager : MonoBehaviour
             if (!mLock) OnChangeLockStatus();
         }else if (!mIsLinked)
         {
-            StandardModelData.UnLinkVolume();
+            StandardModelData.OnReleaseLinkVolume();
             if (mLock) OnChangeLockStatus();
         }
 
@@ -101,12 +111,27 @@ public class StandardModelButtonManager : MonoBehaviour
     private void OnChangeExtensiveUI()
     {
         mIsMenuOn = !mIsMenuOn;
-        mMainMenuObj.SetActive(mIsMenuOn);
+        OrganMenuObject.SetActive(mIsMenuOn);
     }
     private void OnChangeMoreStatus()
     {
         mIsControlBtnGroupOn = !mIsControlBtnGroupOn;
         ControlBtnGroup.SetActive(mIsControlBtnGroupOn);
         //VRUICommonUtils.SwapSprite(ref MoreBtn);
+    }
+    private void flipButtonPanel()
+    {
+        transform.localPosition = new Vector3(
+            -transform.localPosition.x,
+            transform.localPosition.y,
+            transform.localPosition.z);
+        var rot = transform.localRotation.eulerAngles;
+        transform.localRotation = Quaternion.Euler(0, (rot.y + 180) % 360, 0);
+        mLastTimeControlForward = !mLastTimeControlForward;
+    }
+
+    public void OnReleaseObject()
+    {
+        if (Vector3.Dot(RootTransform.forward, Camera.main.transform.forward) > .0f != mLastTimeControlForward) flipButtonPanel();
     }
 }

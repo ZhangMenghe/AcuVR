@@ -58,20 +58,16 @@ public class CrossSectionEdit : BasicMutipleTargetUI
     */
     public void OnAddCrossSectionPlane()
     {
-        if (!VolumeObjectFactory.gTargetVolume || mIsVisibles.Count > VolumeRenderedObject.MAX_CS_PLANE_NUM) return;
+        if (!VolumeObjectFactory.gTargetVolume || mIsVisibles.Count > VolumeObjectFactory.MAX_CS_PLANE_NUM) return;
 
         Transform planeRoot = GameObject.Instantiate((GameObject)Resources.Load("Prefabs/AAASnapCrossSectionPlane")).transform;
         planeRoot.name = "CSPlane" + (++mTotalId);
-        planeRoot.parent = VolumeObjectFactory.gTargetVolume.transform;
-        planeRoot.localRotation = Quaternion.identity;
+        planeRoot.parent = VolumeObjectFactory.gHandGrabVolume.SlicingPlaneRoot;
+        planeRoot.localRotation = VolumeObjectFactory.VolumeForwad?Quaternion.identity: Quaternion.Euler(.0f, .0f, 180.0f);
         planeRoot.localPosition = Vector3.zero;
         planeRoot.localScale = Vector3.one;
 
-        if (Vector3.Dot(planeRoot.forward, Camera.main.transform.forward) > .0f)
-        {
-            planeRoot.localRotation = Quaternion.Euler(.0f, .0f, 180.0f);
-        }
-        planeRoot.GetComponent<CrossSectionPlane>().Initialized(mTotalId);
+        planeRoot.GetComponent<CrossSectionPlane>().Initialized(mTotalId, VolumeObjectFactory.gTargetVolume.transform.localScale);
 
         var mesh_renderer = planeRoot.GetComponentInChildren<MeshRenderer>();
         mesh_renderer.material.SetColor("_Color", mPlaneColor);
@@ -86,10 +82,7 @@ public class CrossSectionEdit : BasicMutipleTargetUI
         DropdownValueChanged(mIsVisibles.Count);
 
         VolumeObjectFactory.gTargetVolume.AddCrossSectionPlane(mesh_renderer.transform);
-        StandardModelFactory.AddCrossSectionPlane(planeRoot.gameObject, mTargetOnNewPlane);
-
-
-        //if (mManipulateMode) ResetManipulator();
+        StandardModelFactory.AddCrossSectionPlane(planeRoot, mTargetOnNewPlane);
     }
     public void OnRemoveCrossSectionPlane()
     {
@@ -106,7 +99,6 @@ public class CrossSectionEdit : BasicMutipleTargetUI
     protected override void OnChangeVisibilityStatus()
     {
         if (mTargetId < 0) return;
-
         base.OnChangeVisibilityStatus();
         VolumeObjectFactory.gTargetVolume.ChangeCrossSectionPlaneActiveness(mTargetId, mIsVisibles[mTargetId]);
         StandardModelFactory.OnChangeVisibility(mTargetId, mIsVisibles[mTargetId]);

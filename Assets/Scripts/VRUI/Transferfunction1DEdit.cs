@@ -16,17 +16,17 @@ public class Transferfunction1DEdit : MonoBehaviour
     private Material tfPaletteGUIMat = null;
 
     private Texture2D histTex = null;
-    private void Start()
+    public void OnInitialize()
     {
         tfGUIMat = Resources.Load<Material>("Materials/TransferFunctionGUIMat");
         tfPaletteGUIMat = Resources.Load<Material>("Materials/TransferFunctionPaletteGUIMat");
 
         tfGUIImage.material = tfGUIMat;
         PaletteImage.material = tfPaletteGUIMat;
-    }
-    void Update()
-    {
-        if (!VolumeObjectFactory.gTargetVolume) return;
+        var ColorSchemeDropDown = ColorSchemeDropDownObj.GetComponent<TMPro.TMP_Dropdown>();
+        ColorSchemeDropDown.onValueChanged.AddListener(delegate {
+            OnColorSchemeChanged(ColorSchemeDropDown.value);
+        });
 
         //menghe:REMOVE
         if (!tfGUIMat)
@@ -46,24 +46,13 @@ public class Transferfunction1DEdit : MonoBehaviour
             else
                 histTex = HistogramTextureGenerator.GenerateHistogramTexture(VolumeObjectFactory.gTargetVolume.dataset);
         }
-
         TransferFunction tf = VolumeObjectFactory.gTargetVolume.transferFunction;
         tfGUIMat.SetTexture("_TFTex", tf.GetTexture());
         tfGUIMat.SetTexture("_HistTex", histTex);
 
         tfPaletteGUIMat.SetTexture("_TFTex", tf.GetTexture());
-
-        var ColorSchemeDropDown = ColorSchemeDropDownObj.GetComponent<TMPro.TMP_Dropdown>();
-        ColorSchemeDropDown.onValueChanged.AddListener(delegate {
-            OnColorSchemeChanged(ColorSchemeDropDown.value);
-        });
     }
-    //private void ClearSelection()
-    //{
-    //    movingColPointIndex = -1;
-    //    movingAlphaPointIndex = -1;
-    //    selectedColPointIndex = -1;
-    //}
+
     public void OnResetButtonClicked()
     {
         var tf = new TransferFunction();

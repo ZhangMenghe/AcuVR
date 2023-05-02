@@ -5,25 +5,28 @@ using System;
 
 public class VolumePropoertiesEdit : MonoBehaviour
 {
-
-    //public VolumeDataEdit VolumeManager;
-    public Transform ScaleSliderGroup;
-    public Transform ContrastMinSliderGroup;
-    public Transform ContrastMaxSliderGroup;
-    public Transform BrightnessSliderGroup;
-    public Transform RendringMethodDropDownGroup;
-    public Button CutOffBtn;
-
-
+    [SerializeField]
+    private Transform BrightnessSliderGroup;
+    [SerializeField]
+    private Button CutOffBtn;
+    [SerializeField]
     private Slider ScaleSlider;
+    [SerializeField]
     private Slider ContrastMinSlider;
+    [SerializeField]
     private Slider ContrastMaxSlider;
+    [SerializeField]
     private Slider BrightnessSlider;
-
+    [SerializeField]
     private TextMeshProUGUI ScaleText;
+    [SerializeField]
     private TextMeshProUGUI CMinText;
+    [SerializeField]
     private TextMeshProUGUI CMaxText;
+    [SerializeField]
     private TextMeshProUGUI BrightText;
+    [SerializeField]
+    private TMPro.TMP_Dropdown RendringMethodDropDown;
 
     private Sprite CheckSprite;
     private Sprite UncheckSprite;
@@ -34,22 +37,7 @@ public class VolumePropoertiesEdit : MonoBehaviour
     {
         CheckSprite = Resources.Load<Sprite>("icons/checkbox_check");
         UncheckSprite = Resources.Load<Sprite>("icons/checkbox");
-    }
-    void Start()
-    {
-        ScaleSlider = ScaleSliderGroup.Find("Slider").GetComponent<Slider>();
-        ScaleText = ScaleSliderGroup.Find("valueText").GetComponent<TextMeshProUGUI>();
-
-        ContrastMinSlider = ContrastMinSliderGroup.Find("Slider").GetComponent<Slider>();
-        CMinText = ContrastMinSliderGroup.Find("valueText").GetComponent<TextMeshProUGUI>();
-
-        ContrastMaxSlider = ContrastMaxSliderGroup.Find("Slider").GetComponent<Slider>();
-        CMaxText = ContrastMaxSliderGroup.Find("valueText").GetComponent<TextMeshProUGUI>();
-
-        BrightnessSlider = BrightnessSliderGroup.Find("Slider").GetComponent<Slider>();
-        BrightText = BrightnessSliderGroup.Find("valueText").GetComponent<TextMeshProUGUI>();
-
-        var RendringMethodDropDown = RendringMethodDropDownGroup.GetComponent<TMPro.TMP_Dropdown>();
+        
         RendringMethodDropDown.onValueChanged.AddListener(delegate {
             OnVolumeRenderingMethodChange(RendringMethodDropDown.value);
         });
@@ -58,17 +46,21 @@ public class VolumePropoertiesEdit : MonoBehaviour
             OnVolumeCutOffChange();
         });
     }
+    public void OnReset()
+    {
+        if (!VolumeObjectFactory.gTargetVolume) return;
 
+        ScaleSlider.value = VolumeObjectFactory.gTargetVolume.GetVolumeUnifiedScale();
+        ScaleText.SetText(ScaleSlider.value.ToString("0.00"));
+    }
 
     public void OnVolumeScaleChange()
     {
+        if (!VolumeObjectFactory.gTargetVolume) return;
 
-        if (ScaleText && ScaleSlider)
-            ScaleText.SetText(ScaleSlider.value.ToString("0.00"));
-        //VolumeObjectFactory.gTargetVolume.GetComponent<VolumeRenderedObject>().SetVolumeUnifiedScale(ScaleSlider.value);
-        //ref VolumeRenderedObject target = ref VolumeManager.getTargetVolume();
-        if (VolumeObjectFactory.gTargetVolume)
-            VolumeObjectFactory.gTargetVolume.SetVolumeUnifiedScale(ScaleSlider.value);
+        ScaleText.SetText(ScaleSlider.value.ToString("0.00"));
+        VolumeObjectFactory.gTargetVolume.SetVolumeUnifiedScale(ScaleSlider.value);
+        StandardModelFactory.OnTargetVolumeTransformationChanged();
     }
 
     public void OnVolumeRenderingMethodChange(int change)
@@ -140,13 +132,5 @@ public class VolumePropoertiesEdit : MonoBehaviour
         }
 
         btn.spriteState = spriteState;
-    }
-    private void Update()
-    {
-        if (VolumeObjectFactory.gVolumeScaleDirty)
-        {
-            ScaleSlider.value = VolumeObjectFactory.gTargetVolume.GetVolumeUnifiedScale();
-            ScaleText.SetText(ScaleSlider.value.ToString("0.00"));
-        }
     }
 }

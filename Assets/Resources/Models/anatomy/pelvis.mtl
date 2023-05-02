@@ -1,0 +1,213 @@
+# Blender 3.4.1 MTL File: 'pelvis.blend'
+# www.blender.org
+
+newmtl Female_Circulatory_red_artery_mat
+Ns 999.999878
+Ka 1.000000 1.000000 1.000000
+Kd 0.640000 0.000000 0.000000
+Ks 1.000000 1.000000 1.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 3
+
+newmtl Female_Circulatory_red_artery_mat1
+Ns 999.999878
+Ka 1.000000 1.000000 1.000000
+Kd 0.640000 0.000000 0.000000
+Ks 1.000000 1.000000 1.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 3
+
+newmtl Female_Circulatory_veins_blue_mat
+Ns 999.999878
+Ka 1.000000 1.000000 1.000000
+Kd 0.000000 0.321600 0.640000
+Ks 1.000000 1.000000 1.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 3
+
+newmtl Female_Circulatory_veins_blue_mat_001
+Ns 999.999878
+Ka 1.000000 1.000000 1.000000
+Kd 0.000000 0.321600 0.640000
+Ks 1.000000 1.000000 1.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 3
+
+newmtl Female_Digestive_colon_mat
+Ns 999.999878
+Ka 1.000000 1.000000 1.000000
+Ks 1.000000 1.000000 1.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 3
+map_Kd C:/Users/zzmmh/Downloads/MAX_MAYA_FBX/Digestive_Colon_Dif.jpg
+map_Bump -bm 0.200000 C:/Users/zzmmh/Downloads/MAX_MAYA_FBX/Digestive_Colon_Bump.jpg
+
+newmtl Female_Digestive_small_intestine_mat
+Ns 999.999878
+Ka 1.000000 1.000000 1.000000
+Ks 1.000000 1.000000 1.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 3
+map_Kd C:/Users/zzmmh/Downloads/MAX_MAYA_FBX/Digestive_Small_Intestines_Dif.jpg
+map_Bump -bm 0.200000 C:/Users/zzmmh/Downloads/MAX_MAYA_FBX/Digestive_Small_Intestines_Bump.jpg
+
+newmtl Female_Integumentary_System_V05female_skin_mat.001
+Ns 370.569122
+Ka 1.000000 1.000000 1.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 3
+map_Kd C:/Users/zzmmh/Downloads/MAX_MAYA_FBX/Female_Body_Dif.jpg
+map_Ks C:/Users/zzmmh/Downloads/MAX_MAYA_FBX/Female_Body_Spec.jpg
+map_Bump -bm 0.030000 C:/Users/zzmmh/Downloads/MAX_MAYA_FBX/female_body_bump.jpg
+
+newmtl Female_Lymphatic_lymph_vessel_mat_1
+Ns 999.999878
+Ka 1.000000 1.000000 1.000000
+Kd 0.118800 0.356400 0.213840
+Ks 1.000000 1.000000 1.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 3
+
+newmtl Female_Lymphatic_lymph_vessel_mat_2
+Ns 999.999878
+Ka 1.000000 1.000000 1.000000
+Kd 0.118800 0.356400 0.213840
+Ks 1.000000 1.000000 1.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 3
+
+newmtl Female_Muscular_legs_mat
+Ns 999.999878
+Ka 1.000000 1.000000 1.000000
+Ks 1.000000 1.000000 1.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 3
+map_Kd C:/Users/zzmmh/Downloads/MAX_MAYA_FBX/Muscles_Legs_Dif.jpg
+map_Bump -bm 0.080000 C:/Users/zzmmh/Downloads/MAX_MAYA_FBX/Muscles_Legs_Bump.jpg
+
+newmtl Female_Muscular_torso_mat
+Ns 999.999878
+Ka 1.000000 1.000000 1.000000
+Ks 1.000000 1.000000 1.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 3
+map_Kd C:/Users/zzmmh/Downloads/MAX_MAYA_FBX/Muscles_Torso_Dif.jpg
+map_Bump -bm 0.080000 C:/Users/zzmmh/Downloads/MAX_MAYA_FBX/Muscles_Torso_Bump.jpg
+
+newmtl Female_Nervous_brain_whole_mat
+Ns 999.999878
+Ka 1.000000 1.000000 1.000000
+Ks 1.000000 1.000000 1.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 3
+map_Kd C:/Users/zzmmh/Downloads/MAX_MAYA_FBX/Nervous_Brain_Whole_Dif.jpg
+map_Bump -bm 0.100000 C:/Users/zzmmh/Downloads/MAX_MAYA_FBX/Nervous_Brain_Whole_Bump.jpg
+
+newmtl Female_Nervous_nerves_mat
+Ns 999.999878
+Ka 1.000000 1.000000 1.000000
+Kd 0.713600 0.640000 0.505600
+Ks 1.000000 1.000000 1.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 3
+
+newmtl Female_Skeletal_System_V05Female_Skeletal_costal_cartilage_mat
+Ns 499.999969
+Ka 1.000000 1.000000 1.000000
+Kd 0.583781 0.546842 0.477019
+Ks 1.000000 1.000000 1.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 3
+
+newmtl Female_Skeletal_lower_limbs_mat
+Ns 220.000015
+Ka 1.000000 1.000000 1.000000
+Ks 1.000000 1.000000 1.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 3
+map_Kd C:/Users/zzmmh/Downloads/MAX_MAYA_FBX/Skeletal_Lower_Limbs_Dif.jpg
+map_Bump -bm 0.030000 C:/Users/zzmmh/Downloads/MAX_MAYA_FBX/Skeletal_Lower_Limbs_Bump.jpg
+
+newmtl Female_Skeletal_spine_mat
+Ns 220.000015
+Ka 1.000000 1.000000 1.000000
+Ks 1.000000 1.000000 1.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 3
+map_Kd C:/Users/zzmmh/Downloads/MAX_MAYA_FBX/Skeletal_Spine_Dif.jpg
+map_Bump -bm 0.030000 C:/Users/zzmmh/Downloads/MAX_MAYA_FBX/Skeletal_Spine_Bump.jpg
+
+newmtl Female_Skeletal_vertabral_discs_mat
+Ns 816.748047
+Ka 1.000000 1.000000 1.000000
+Kd 0.583781 0.546842 0.477019
+Ks 1.000000 1.000000 1.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 3
+
+newmtl Female_URE_bladder_mat
+Ns 999.999878
+Ka 1.000000 1.000000 1.000000
+Ks 1.000000 1.000000 1.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 3
+map_Kd C:/Users/zzmmh/Downloads/MAX_MAYA_FBX/Female_Urinary_Dif.jpg
+map_Bump -bm 0.100000 C:/Users/zzmmh/Downloads/MAX_MAYA_FBX/Female_Urinary_Bump.jpg
+
+newmtl Female_URE_organs_mat
+Ns 999.999878
+Ka 1.000000 1.000000 1.000000
+Ks 1.000000 1.000000 1.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 3
+map_Kd C:/Users/zzmmh/Downloads/MAX_MAYA_FBX/Female_Repoductive_Dif.jpg
+map_Bump -bm 0.020000 C:/Users/zzmmh/Downloads/MAX_MAYA_FBX/Female_Repoductive_Bump.jpg
+
+newmtl Female_URE_ureter_mat
+Ns 999.999878
+Ka 1.000000 1.000000 1.000000
+Ks 1.000000 1.000000 1.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 3
+map_Kd C:/Users/zzmmh/Downloads/MAX_MAYA_FBX/Female_Urinary_Dif.jpg
+map_Bump -bm 0.100000 C:/Users/zzmmh/Downloads/MAX_MAYA_FBX/Female_Urinary_Bump.jpg

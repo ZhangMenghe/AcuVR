@@ -32,12 +32,16 @@ public class SlicingEdit : BasicMutipleTargetUI
         mPlaneColor = new Color(.15f, 0.5f, .25f, 1.0f);
         mPlaneColorInactive = new Color(.25f, 0.35f, .3f, 0.01f);
     }
-    private void Start()
+    public void OnInitialize()
     {
         Initialize();
         var scroll_rect = transform.GetComponentInChildren<ScrollRect>();
         mScrollWidth = scroll_rect.GetComponent<RectTransform>().sizeDelta.x;
         mScrollContentRect = scroll_rect.content.GetComponent<RectTransform>();
+        ///////FIND A BETTER WAY TO DO SO!
+        OnAddSlicingPlane();
+        OnRemoveSlicingPlane();
+        mTotalId = 0;
     }
     public void DisableNeeldeProjection()
     {
@@ -117,9 +121,7 @@ public class SlicingEdit : BasicMutipleTargetUI
         if (!VolumeObjectFactory.gTargetVolume) return;
 
         Transform planeRoot = VolumeObjectFactory.gTargetVolume.CreateSlicingPlane();
-        planeRoot.GetComponent<SingleSlicingPlane>().Initialized(++mTotalId);
-
-
+        planeRoot.GetComponent<SingleSlicingPlane>().Initialized(++mTotalId, VolumeObjectFactory.gTargetVolume.transform.localScale);
 
         var slicePlane = VolumeObjectFactory.gTargetVolume.SlicingPlaneList[mIsVisibles.Count];
         var box_renderer = slicePlane.Find("CollidingBBox").GetComponent<MeshRenderer>();

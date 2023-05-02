@@ -64,12 +64,10 @@ namespace UnityVolumeRendering
 
         private HelmVolumeParam helm_params = new HelmVolumeParam();
 
-        public static readonly int MAX_CS_PLANE_NUM = 5;
-
         private List<Matrix4x4> mCSPlaneMatrices = new List<Matrix4x4>();
         private List<float> mCSPlaneInBounds = new List<float>();
-        private Matrix4x4[] mCSPlaneMatriceArray = new Matrix4x4[MAX_CS_PLANE_NUM];
-        private float[] mCSPlaneInBoundArray = new float[MAX_CS_PLANE_NUM];
+        private Matrix4x4[] mCSPlaneMatriceArray = new Matrix4x4[VolumeObjectFactory.MAX_CS_PLANE_NUM];
+        private float[] mCSPlaneInBoundArray = new float[VolumeObjectFactory.MAX_CS_PLANE_NUM];
 
         private float m_unified_scale = 1.0f;
         private Vector3 m_real_scale;
@@ -83,10 +81,10 @@ namespace UnityVolumeRendering
         public static bool isSnapAble = true;
 
         private BoxCollider mVolumeCollider;
-        
-        public void onReset()
+
+        public void OnReset()
         {
-            SetVolumeUnifiedScale(1.0f);
+            m_unified_scale = 1.0f;
         }
         private void UpdateCrossSectionMatrics()
         {
@@ -106,7 +104,6 @@ namespace UnityVolumeRendering
                 meshRenderer.sharedMaterial.SetMatrixArray("_CrossSectionMatrices", mCSPlaneMatriceArray);
                 meshRenderer.sharedMaterial.SetFloatArray("_CrossSectionInBounds", mCSPlaneInBoundArray);
             }
-
         }
         public void AddCrossSectionPlane(in Transform planeMesh)
         {
@@ -132,23 +129,6 @@ namespace UnityVolumeRendering
             mCSPlanesActive.RemoveAt(targetId);
 
             UpdateCrossSectionMatrics();
-
-            //update m_cs_plane_matrices
-            //int active_count = 0;
-            //for (int i = 0; i <mCSPlanesActive.Count; i++)
-            //{
-            //    if(mCSPlanesActive[i]) m_cs_plane_matrices[active_count++] = m_cs_planes[i].worldToLocalMatrix * transform.localToWorldMatrix;
-            //}
-            //if(active_count == 0)
-            //{
-            //    meshRenderer.sharedMaterial.DisableKeyword("CUTOUT_PLANE");
-            //}
-            //else
-            //{
-            //    meshRenderer.sharedMaterial.EnableKeyword("CUTOUT_PLANE");
-            //    meshRenderer.sharedMaterial.SetInteger("_CrossSectionNum", active_count);
-            //    meshRenderer.sharedMaterial.SetMatrixArray("_CrossSectionMatrices", m_cs_plane_matrices);
-            //}
         }
 
         public void ChangeCrossSectionPlaneActiveness(int targetId, bool isVisible)
@@ -159,7 +139,7 @@ namespace UnityVolumeRendering
             int matrixIdx = mCSPlanesActive.Take(targetId).Count(b => b);
             if (isVisible)
             {
-                bool inbound = mVolumeCollider.bounds.Intersects(m_cs_planes[targetId].GetComponent<BoxCollider>().bounds);
+                var inbound = mVolumeCollider.bounds.Intersects(m_cs_planes[targetId].GetComponent<BoxCollider>().bounds);
 
                 mCSPlaneMatrices.Insert(matrixIdx, m_cs_planes[targetId].worldToLocalMatrix * transform.localToWorldMatrix);
                 mCSPlaneInBounds.Insert(matrixIdx, inbound?1.0f:-1.0f);
@@ -176,6 +156,11 @@ namespace UnityVolumeRendering
         /********OLD FUNCTIONS***********/
         public Transform CreateCrossSectionPlane()
         {
+            m_cs_planes.Clear();
+            mCSPlanesActive.Clear();
+            mCSPlaneInBounds.Clear();
+            mCSPlaneMatrices.Clear();
+
             Transform cross_plane;
             if (isSnapAble)
             {
@@ -185,11 +170,13 @@ namespace UnityVolumeRendering
                 cross_plane.localPosition = Vector3.zero;
                 cross_plane.localScale = Vector3.one;
                 Transform csplane_mesh = cross_plane.Find("TargetObject").Find("Mesh");
+                csplane_mesh.name = "CSPlane1";
                 csplane_mesh.localRotation = Quaternion.Euler(90.0f, 0.0f, 0.0f);
                 csplane_mesh.localPosition = Vector3.zero;
                 csplane_mesh.localScale = Vector3.one * 1.3f;
 
-                m_cs_planes.Add(csplane_mesh);
+                AddCrossSectionPlane(csplane_mesh);
+
             }
             else
             {
@@ -200,8 +187,9 @@ namespace UnityVolumeRendering
                 cross_plane.localPosition = Vector3.zero;
                 cross_plane.localScale = Vector3.one * 1.2f;
             }
-            cross_plane.name = "CSPlane" + m_cs_planes.Count;
+            cross_plane.name = "CSPlane1";//"CSPlane" + m_cs_planes.Count;
             meshRenderer.sharedMaterial.EnableKeyword("CUTOUT_PLANE");
+            UpdateCrossSectionPlane(cross_plane.name, true);
             return cross_plane;
         }
 
@@ -227,10 +215,10 @@ namespace UnityVolumeRendering
                 slicePlaneObj = GameObject.Instantiate(Resources.Load<GameObject>("Prefabs/AAASnapSlicingPlane")).transform;
 
                 slicePlaneObj.name = "SLPlane" + SlicingPlaneList.Count;
-                slicePlaneObj.parent = transform;
+                slicePlaneObj.parent = VolumeObjectFactory.gHandGrabVolume.SlicingPlaneRoot;//transform;
 
                 //AAASnapSlicingPlane
-                slicePlaneObj.localRotation = Quaternion.identity;
+                slicePlaneObj.localRotation = VolumeObjectFactory.VolumeForwad?Quaternion.identity: Quaternion.Euler(.0f, .0f, 180.0f);
                 slicePlaneObj.localPosition = Vector3.zero;
                 slicePlaneObj.localScale = Vector3.one;
 
@@ -268,7 +256,6 @@ namespace UnityVolumeRendering
 
                 SlicingPlaneList.RemoveAt(TargetId);
             }
-            //MENGHE: REMOVE THE ONE ON SHLF
         }
         public void SetRenderMode(RenderMode mode)
         {
@@ -341,15 +328,16 @@ namespace UnityVolumeRendering
         }
         public void SetOriginalScale(Vector3 scale) { 
             m_real_scale = scale;
-            if (isSnapAble)
-            {
-                transform.localScale = m_real_scale;
-                transform.parent.localScale = Vector3.one * m_unified_scale;
-            }
-            else
-            {
-                transform.localScale = m_real_scale * m_unified_scale;
-            }
+            transform.localScale = m_real_scale;
+            //if (isSnapAble)
+            //{
+            //    transform.localScale = m_real_scale;
+            //    transform.parent.parent.localScale = Vector3.one * m_unified_scale;
+            //}
+            //else
+            //{
+            //    transform.localScale = m_real_scale * m_unified_scale;
+            //}
         }
         public void SetVolumeUnifiedScale(float new_scale)
         {
@@ -360,14 +348,13 @@ namespace UnityVolumeRendering
                 m_unified_scale = new_scale;
                 if (isSnapAble)
                 {
-                    transform.parent.localScale = Vector3.one * m_unified_scale;
+                    transform.parent.parent.localScale = Vector3.one * m_unified_scale;
                 }
                 else
                 {
                     transform.localScale = m_real_scale * m_unified_scale;
                 }
             }
-            VolumeObjectFactory.gVolumeScaleDirty = true;
         }
 
         public float GetVolumeUnifiedScale()
@@ -566,7 +553,7 @@ namespace UnityVolumeRendering
             }
         }
 
-            public void UpdateCrossSectionPlane(string targetName, bool updating)
+        public void UpdateCrossSectionPlane(string targetName, bool updating)
         {
             if (!updating) { mCSUpdatingId = -1; return; }
             mCSUpdatingId = m_cs_planes.FindIndex(a => a.name == targetName);
@@ -575,7 +562,6 @@ namespace UnityVolumeRendering
         private void LateUpdate()
         {
             VolumeObjectFactory.gHandGrabbleDirty = false;
-            VolumeObjectFactory.gVolumeScaleDirty = false;
         }
     }
 }

@@ -87,14 +87,9 @@ Shader "VolumeRendering/DirectVolumeRenderingShader"
             float4 _ContrastCutoff;
             float4 _ContrastAdjust;
 
-            //int _u_maskbits;
-
-//#if CUTOUT_ON
-            //float4x4 _CrossSectionMatrix;
             int _CrossSectionNum;
             float4x4 _CrossSectionMatrices[5];
             float _CrossSectionInBounds[5];
-//#endif
 
             struct RayInfo
             {

@@ -41,10 +41,11 @@
             float4 _Color;
             sampler2D _MainTex;
             float4 _MainTex_ST;
-
+            uniform float4x4 _planeModelMat;
             v2f vert (appdata v)
             {
                 v2f o;
+                //o.vertex = mul(UNITY_MATRIX_VP, mul(_planeModelMat, v.vertex));
                 o.vertex = UnityObjectToClipPos(v.vertex);
                 o.uv = TRANSFORM_TEX(v.uv, _MainTex);
                 UNITY_TRANSFER_FOG(o,o.vertex);

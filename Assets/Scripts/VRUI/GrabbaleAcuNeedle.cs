@@ -21,14 +21,15 @@ public class GrabbaleAcuNeedle : MonoBehaviour
     private GameObject HandGrabInteractableObject;
     public bool IsLock{get; private set;}
 
-    private Transform mLinkRoot;
-    private Transform mUnlinkRoot;
+    //private Transform mLinkRoot;
+    //private Transform mUnlinkRoot;
 
     private BoxCollider mTargetVolumeCollider;
+    private BoxCollider mNeedleCollider;
     private Transform mUnAttachedRoot;
     private Transform mAttachedRoot;
 
-
+    private bool mFirstTimeGrab;
     //private NeedlingEdit mNeedlingManagePanel;
     //private bool mIsGlowing;
     //private void Start()
@@ -45,29 +46,36 @@ public class GrabbaleAcuNeedle : MonoBehaviour
     public void OnInitialized(int id)
     {
         IsLock = false;
-        transform.name = "Needle " + id;
         IDTextField.SetText(id.ToString());
         //mIsGlowing = false;
-        mUnlinkRoot = transform.parent;
-        mLinkRoot = VolumeObjectFactory.gTargetVolume.transform.parent;
+        //mUnlinkRoot = transform.parent;
+        //mLinkRoot = VolumeObjectFactory.gTargetVolume.transform.parent;
         mTargetVolumeCollider = VolumeObjectFactory.gTargetVolume.GetComponentInChildren<BoxCollider>();
+        mNeedleCollider = GetComponentInChildren<BoxCollider>();
         mAttachedRoot = VolumeObjectFactory.gTargetVolume.transform.parent;
         mUnAttachedRoot = transform.parent;
+        mFirstTimeGrab = true;
     }
     public void OnGrabNeedle()
     {
         if (BoundingObj.activeSelf) BoundingObj.SetActive(false);
-        //if (!mFirstTimeGrab) return;
-
-        //IsLock = !IsLock;
-        //transform.parent.GetComponent<GrabbaleAcuNeedle>().OnChangeVolumeLinkStatus(IsLock);
-        StandardModelFactory.OnAddNeedle(gameObject);
+        if (mFirstTimeGrab)
+        {
+            StandardModelFactory.OnAddNeedle(gameObject);
+            mFirstTimeGrab = false;
+        }
+        else
+        {
+            StandardModelFactory.OnGrabNeedle(name);
+        }
     }
 
     public void OnReleaseNeedle()
     {
         //if needle is closed to the target area, attach it to the target volume 
-            transform.parent = mTargetVolumeCollider.bounds.Contains(transform.position)? mAttachedRoot: mUnAttachedRoot;
+        transform.parent = mTargetVolumeCollider.bounds.Intersects(mNeedleCollider.bounds)? mAttachedRoot : mUnAttachedRoot;
+
+        //Contains(transform.position)? mAttachedRoot: mUnAttachedRoot;
         StandardModelFactory.OnReleaseNeedle();
     }
 
@@ -84,11 +92,11 @@ public class GrabbaleAcuNeedle : MonoBehaviour
     {
         HandGrabInteractableObject.SetActive(IsLock);
         IsLock = !IsLock;
-        OnChangeVolumeLinkStatus(IsLock);
+        //OnChangeVolumeLinkStatus(IsLock);
     }
     public void OnChangeVolumeLinkStatus(bool isLink) {
-        transform.parent = isLink? mLinkRoot: mUnlinkRoot;
-        transform.localScale = Vector3.one;
+        //transform.parent = isLink? mLinkRoot: mUnlinkRoot;
+        //transform.localScale = Vector3.one;
     }
     //public void OnDeleteNeedle()
     //{

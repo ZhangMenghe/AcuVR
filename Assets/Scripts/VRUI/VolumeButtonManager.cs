@@ -1,19 +1,36 @@
 using UnityEngine;
-using UnityVolumeRendering;
 public class VolumeButtonManager : BasicSingleObjectButtonGroupManager
 {
+    [SerializeField]
+    private Transform RootTransform;
+    private bool mLastTimeControlForward;
     private void Awake()
     {
         INITIAL_VISIBLE = true;
         INITIAL_LOCK = false;
+        mLastTimeControlForward = true;
+        VolumeObjectFactory.VolumeForwad = mLastTimeControlForward;
         OnAwake();
+    }
+    private void flipButtonPanel()
+    {
+        transform.localPosition = new Vector3(
+            -transform.localPosition.x,
+            transform.localPosition.y,
+            transform.localPosition.z);
+        var rot = transform.localRotation.eulerAngles;
+        transform.localRotation = Quaternion.Euler(0, (rot.y + 180) % 360, 0);
+        mLastTimeControlForward = !mLastTimeControlForward;
+        VolumeObjectFactory.VolumeForwad = mLastTimeControlForward;
     }
     protected override void OnReset()
     {
         base.OnReset();
-
-        TargetObject.transform.parent.rotation = Quaternion.identity;
-        TargetObject.transform.parent.position = VolumeObjectFactory.DEFAULT_VOLUME_POSITION;
-        TargetObject.GetComponent<VolumeRenderedObject>().onReset();
+        if (!mLastTimeControlForward) flipButtonPanel();
+        VolumeObjectFactory.ResetTargetVolume();
+    }
+    public void OnReleaseObject()
+    {
+        if (Vector3.Dot(RootTransform.forward, Camera.main.transform.forward) > .0f != mLastTimeControlForward) flipButtonPanel();
     }
 }

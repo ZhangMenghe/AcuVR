@@ -4,17 +4,23 @@ using UnityVolumeRendering;
 public class VolumeObjectFactory
 {
     public static VolumeRenderedObject gTargetVolume { get; set; } = null;
+    public static HandGrabVolume gHandGrabVolume { get; set; } = null;
     public static bool gHandGrabbleDirty = false;
-    public static bool gVolumeScaleDirty = false;
 
     public static readonly Vector3 DEFAULT_VOLUME_POSITION = new Vector3(.0f, 1.5f, .3f);
+    public static bool VolumeForwad;
     private static readonly Quaternion DEFAULT_VOLUME_ROTATION = Quaternion.Euler(-90.0f, 0.0f, 180.0f);
-    private static CylinderUI mMainUI;
+    public static readonly int MAX_CS_PLANE_NUM = 5;
+    public static string DataVolumePart;
 
-    public static void OnWorkingTableChange(bool isOn) {
-        ResetTargetVolume();
-        GetVolumeTargetObject().gameObject.GetComponent<Rigidbody>().isKinematic = !isOn;
-    }
+    private static CylinderUI mMainUI;
+    private static Vector3 mSavePos;
+    private static Quaternion mSaveRot;
+    private static Transform mVolumeRoot;
+    //public static void OnWorkingTableChange(bool isOn) {
+    //    ResetTargetVolume();
+    //    GetVolumeTargetObject().gameObject.GetComponent<Rigidbody>().isKinematic = !isOn;
+    //}
     public static void OnTargetNeedleChange(int id, in GrabbaleAcuNeedle targetNeedle)
     {
         if (id < 0) mMainUI.SlicingPanel.GetComponent<SlicingEdit>().DisableNeeldeProjection();
@@ -31,33 +37,62 @@ public class VolumeObjectFactory
     public static void GatherObjectsInScene()
     {
         var volumes = GameObject.FindGameObjectsWithTag("VolumeRenderingObject");
-        if (volumes.Length > 0) gTargetVolume = volumes[0].GetComponent<VolumeRenderedObject>();
+        if (volumes.Length > 0)
+        {
+            gTargetVolume = volumes[0].GetComponent<VolumeRenderedObject>();
+            mVolumeRoot = gTargetVolume.transform.parent.parent;
+            gHandGrabVolume = mVolumeRoot.GetComponent<HandGrabVolume>();
+            DataVolumePart = mVolumeRoot.name.Contains("pelvis") ? "pelvis" : "head";
+        }
+    }
+    public static void SaveCurrentTransform()
+    {
+        mSavePos = mVolumeRoot.position;
+        mSaveRot = mVolumeRoot.rotation;
+    }
+    public static void RestorTransform(Transform followUpTransform)
+    {
+        mVolumeRoot.rotation = mSaveRot;
+        followUpTransform.rotation = mSaveRot;
+
+        var translation = mSavePos - mVolumeRoot.position;
+        mVolumeRoot.position = mSavePos;
+        followUpTransform.position += translation;
+        followUpTransform.localScale = Vector3.one;
     }
     //MENGHE:SNAPABLE T ONLY IN VR
     public static void ResetTargetVolume()
     {
         if (!gTargetVolume) return;
-        gTargetVolume.transform.parent.rotation = Quaternion.identity;
-        gTargetVolume.transform.parent.position = DEFAULT_VOLUME_POSITION;
-        gTargetVolume.onReset();
+
+        ResetTargetVolumeTransform();
+        gTargetVolume.OnReset();
+        mMainUI.OnTargetVolumeReset();
+        StandardModelFactory.OnTargetVolumeReset();
+    }
+    public static void ResetTargetVolumeTransform()
+    {
+        if (!gTargetVolume) return;
+        mVolumeRoot.rotation = Quaternion.identity;
+        mVolumeRoot.position = DEFAULT_VOLUME_POSITION;
+        mVolumeRoot.localScale = Vector3.one;
+
+        //gTargetVolume.transform.parent.rotation = Quaternion.identity;
+        //gTargetVolume.transform.parent.position = DEFAULT_VOLUME_POSITION;
     }
 
-    public static Transform GetVolumeTargetObject()
-    {
-        return gTargetVolume.transform.parent.parent;
-    }
     public static VolumeRenderedObject CreateObject(VolumeDataset dataset, bool Snapable = true)
     {
         Transform VolumeObject;
         Transform meshContainer;
         if (Snapable)
         {
-            Transform snapable_obj = GameObject.Instantiate((GameObject)Resources.Load("Prefabs/AAHVolume")).transform;
-            snapable_obj.name = "VolumeRenderedObject_" + dataset.datasetName;
-            snapable_obj.rotation = Quaternion.identity;
-            snapable_obj.position = DEFAULT_VOLUME_POSITION;
+            mVolumeRoot = GameObject.Instantiate((GameObject)Resources.Load("Prefabs/AAHVolume")).transform;
+            mVolumeRoot.name = "VolumeRenderedObject_" + dataset.datasetName;
+            mVolumeRoot.rotation = Quaternion.identity;
+            mVolumeRoot.position = DEFAULT_VOLUME_POSITION;
 
-            VolumeObject = snapable_obj.Find("TargetObject").Find("VolumeObject");
+            VolumeObject = mVolumeRoot.Find("TargetObject").Find("VolumeObject");
             VolumeObject.localRotation = DEFAULT_VOLUME_ROTATION;
             VolumeObject.localPosition = Vector3.zero;
 

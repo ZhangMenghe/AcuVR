@@ -35,6 +35,15 @@ public class CylinderUI : MonoBehaviour
         mIsPanelOn = Enumerable.Repeat(false, (int)CylinderPanels.END_PANEL).ToArray();
         StandardModelFactory.setCrossSectionManager(SlicingPanel.GetComponentInChildren<CrossSectionEdit>());
     }
+    private void Start()
+    {
+        TransferFunctionPanel.GetComponent<Transferfunction1DEdit>().OnInitialize();
+        SlicingPanel.GetComponent<SlicingEdit>().OnInitialize();
+    }
+    public void OnTargetVolumeReset()
+    {
+        VolumePropoertiesPanel.GetComponent<VolumePropoertiesEdit>().OnReset();
+    }
     private void change_panel_status(in GameObject obj, int pos)
     {
         mIsPanelOn[pos] = !mIsPanelOn[pos];
@@ -87,4 +96,5 @@ public class CylinderUI : MonoBehaviour
     {
         StandardModelFactory.OnChangeStandardModelStatus();
     }
+
 }

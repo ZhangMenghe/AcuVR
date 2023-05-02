@@ -19,30 +19,30 @@ public class NeedleButtonManager : MonoBehaviour
             OnChangeLockStatus();
         });
     }
-    public void OnGrabNeedle()
-    {
-        if (!mFirstTime) return;
+    //public void OnGrabNeedle()
+    //{
+    //    if (!mFirstTime) return;
 
-        mLock = !mLock;
-        VRUICommonUtils.SwapSprite(ref LockBtn);
+    //    mLock = !mLock;
+    //    VRUICommonUtils.SwapSprite(ref LockBtn);
 
-        transform.parent.GetComponent<GrabbaleAcuNeedle>().OnChangeVolumeLinkStatus(mLock);
+    //    transform.parent.GetComponent<GrabbaleAcuNeedle>().OnChangeVolumeLinkStatus(mLock);
 
-        StandardModelFactory.OnAddNeedle(transform.parent.gameObject);
-    }
-    public void OnReleaseNeedle()
-    {
-        if (mFirstTime)
-        {
-            HandGrabInteractableObject.SetActive(!mLock);
-            mFirstTime = false;
-        }
-        else
-        {
-            OnChangeLockStatus();
-        }
-        StandardModelFactory.OnReleaseNeedle();
-    }
+    //    StandardModelFactory.OnAddNeedle(transform.parent.gameObject);
+    //}
+    //public void OnReleaseNeedle()
+    //{
+    //    if (mFirstTime)
+    //    {
+    //        HandGrabInteractableObject.SetActive(!mLock);
+    //        mFirstTime = false;
+    //    }
+    //    else
+    //    {
+    //        OnChangeLockStatus();
+    //    }
+    //    StandardModelFactory.OnReleaseNeedle();
+    //}
     public void OnChangeLockStatus()
     {
         HandGrabInteractableObject.SetActive(mLock);

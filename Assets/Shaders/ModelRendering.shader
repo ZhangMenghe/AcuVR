@@ -44,22 +44,22 @@ Shader "VolumeRendering/ModelRendering"
                 fixed4 _Color;
                 half _Glossiness;
                 half _Metallic;
+
                 int _CrossSectionNum;
                 float4x4 _CrossSectionMatrices[5];
-
+                float _CrossSectionInBounds[5];
+                
                 bool IsCutout(float3 currPos)
                 {
-                    float3 pos = currPos;// -float3(0.5f, 0.5f, 0.5f);
+                    float3 pos = currPos;
                     for (int i = 0; i < _CrossSectionNum; i++) {
+                        if (_CrossSectionInBounds[i] < .0f) continue;
                         // Convert from model space to plane's vector space
                         float3 planeSpacePos = mul(_CrossSectionMatrices[i], float4(pos, 1.0f));
                         if (planeSpacePos.z > 0.0f) return true;
-                        //if (pos.z > .0f) return true;
                     }
                     return false;
                 }
-
-
 
                 frag_in vert(vert_in v)
                 {

@@ -9,12 +9,12 @@ public class NeedlingEdit : MonoBehaviour
     public Button GlowBtn;
     public Button LockBtn;
 
-    private List<GrabbaleAcuNeedle> mGrabbableNeedles = new List<GrabbaleAcuNeedle>();
-    private List<string> mNeedleNames = new List<string>();
+    public List<GrabbaleAcuNeedle> mGrabbableNeedles{ get; private set; }
+    public List<string> mNeedleNames { get; private set; }
 
     private Transform mAcuNeedleRoot;
 
-    private int mTargetId = -1;
+    public int mTargetId { get; private set; }
     private int mTotalId = 0;
     private bool mNeedleTargetVolume = true;
     private bool mIsGlowing = false;
@@ -22,9 +22,12 @@ public class NeedlingEdit : MonoBehaviour
 
     private void Start()
     {
-        mCurrentLock = false;
+        mCurrentLock = false; mTargetId = -1;
+        mGrabbableNeedles = new List<GrabbaleAcuNeedle>();
+        mNeedleNames = new List<string>();
 
-        mAcuNeedleRoot = new GameObject("NeedleRoot").transform;
+        //mAcuNeedleRoot = new GameObject("NeedleRoot").transform;
+        mAcuNeedleRoot = VolumeObjectFactory.gTargetVolume.transform.parent;
         mTargetId = -1;
         TargetDropDown.onValueChanged.AddListener(delegate {
             OnTargetValueChanged(TargetDropDown.value-1);
@@ -38,8 +41,8 @@ public class NeedlingEdit : MonoBehaviour
         LockBtn.onClick.AddListener(delegate {
             OnTargetLockChange();
         });
+        StandardModelFactory.setNeedlingManager(this);
     }
-
     private void ResetTargetNeedle()
     {
         if (mTargetId < 0) return;
@@ -56,6 +59,8 @@ public class NeedlingEdit : MonoBehaviour
         mTotalId++;
 
         var acuNeedleObj = GameObject.Instantiate(Resources.Load<GameObject>("Prefabs/AAAAcuNeedle")).GetComponent<GrabbaleAcuNeedle>();
+        
+        acuNeedleObj.transform.name = "Needle " + mTotalId;
         acuNeedleObj.transform.parent = mAcuNeedleRoot;
         acuNeedleObj.OnInitialized(mTotalId);
         mGrabbableNeedles.Add(acuNeedleObj);

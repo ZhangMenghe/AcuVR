@@ -6,7 +6,7 @@ public class BasicSingleObjectButtonGroupManager : MonoBehaviour
 {
     public GameObject TargetObject;
     public GameObject HandGrabInteractableObject;
-    public Oculus.Interaction.RayInteractable rayInteractable;
+    //public Oculus.Interaction.RayInteractable rayInteractable;
 
     public Button MoreBtn;
     public Button LockBtn;
@@ -62,7 +62,7 @@ public class BasicSingleObjectButtonGroupManager : MonoBehaviour
     protected virtual void OnChangeLockStatus()
     {
         HandGrabInteractableObject.SetActive(mLock);
-        rayInteractable.enabled = mLock;
+        //rayInteractable.enabled = mLock;
         if (mLock) VolumeObjectFactory.gHandGrabbleDirty = true;
 
         mLock = !mLock;
